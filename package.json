@@ -12,6 +12,9 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "data:build": "python scripts/build_data.py",
+    "data:sync": "python scripts/sync_sheet.py",
+    "data:sync:build": "python scripts/sync_sheet.py && bun run build",
+    "data:watch": "python scripts/sync_sheet.py --watch --interval 300",
     "start": "bun build/index.js"
   },
   "devDependencies": {

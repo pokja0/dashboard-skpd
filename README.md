@@ -83,6 +83,33 @@ menulis JSON yang dipakai aplikasi. Catatan perbaikan (baris duplikat, tanggal s
 baris tanpa nama, baris non-SKPD) ikut ditulis ke `rekap.json` dan ditampilkan pada
 halaman superadmin.
 
+### Sinkronisasi Google Sheet
+
+Sumber publik:
+`https://docs.google.com/spreadsheets/d/1Ryi-NH8Bb1PB3E0ejlTvf3_YDNzsOb7WL0mY8cSpCvo/edit?gid=874698858`
+
+Tarik data terbaru lalu bangun ulang `rekap.json`:
+
+```bash
+bun run data:sync
+```
+
+Pantau perubahan setiap 5 menit saat pengembangan:
+
+```bash
+bun run data:watch
+```
+
+Saat `bun run dev` aktif bersama `data:watch`, perubahan `rekap.json` akan dimuat ulang
+oleh Vite. Untuk produksi, jalankan:
+
+```bash
+bun run data:sync:build
+```
+
+lalu restart proses `bun run start`. URL CSV dapat diganti lewat environment variable
+`SHEET_CSV_URL`.
+
 ## Teknologi
 
 - SvelteKit 3 + Svelte 5

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from './$types';
   import Icon from '#lib/components/Icon.svelte';
+  import { dataset } from '#lib/data';
   import { num } from '#lib/format';
 
   let { data }: { data: PageData } = $props();
@@ -19,6 +20,16 @@
   <div class="page-head-meta">
     <a class="btn ghost small" href="/admin"><Icon name="chevron-left" size={14} /> Kembali ke admin</a>
     <a class="btn ghost small" href="/admin/data/csv"><Icon name="file" size={14} /> Unduh CSV</a>
+    {#if dataset.meta.sourceUrl}
+      <a
+        class="btn ghost small"
+        href={dataset.meta.sourceUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <Icon name="external-link" size={14} /> Buka Google Sheet
+      </a>
+    {/if}
     <span class="chip">{num(data.total)} baris</span>
   </div>
 </div>

@@ -761,7 +761,7 @@ payload = {
         'periodEnd': '2026-11-03',
         'generatedAt': '2026-11-04',
         'source': 'Rekap Tim Staf Sekda',
-        'sourceUrl': '',
+        'sourceUrl': 'https://docs.google.com/spreadsheets/d/1Ryi-NH8Bb1PB3E0ejlTvf3_YDNzsOb7WL0mY8cSpCvo/edit?gid=874698858#gid=874698858',
         'months': MONTHS,
         'monthLabels': MONTH_LABELS,
         'unitCount': len(units),
