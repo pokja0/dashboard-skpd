@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { statusColors, statusOrder, type DashboardUnit } from '#lib/data';
-  import { buildDashboard, defaultRange } from '#lib/dashboard';
+  import { buildDashboard, fullRange } from '#lib/dashboard';
   import { num, pct, decimal, dateISO, truncate } from '#lib/format';
   import Icon from '#lib/components/Icon.svelte';
   import KpiCard from '#lib/components/KpiCard.svelte';
@@ -12,7 +12,7 @@
 
   type Category = 'attendance' | 'disposition' | 'travel' | 'reward';
 
-  const data = buildDashboard(defaultRange.from, defaultRange.to);
+  const data = buildDashboard(fullRange.from, fullRange.to);
   const meta = data.meta;
   const summary = data.summary;
   const insights = data.insights;
@@ -76,7 +76,7 @@
   function metricValue(unit: DashboardUnit): number {
     if (activeCategory === 'attendance') return unit.attendance.pct;
     if (activeCategory === 'disposition') return unit.disposition.pct ?? -1;
-    if (activeCategory === 'reward') return unit.reward ?? -1;
+    if (activeCategory === 'reward') return unit.reward;
     return unit.travel.total;
   }
 
@@ -87,7 +87,7 @@
   function barWidth(unit: DashboardUnit): number {
     if (activeCategory === 'attendance') return unit.attendance.pct;
     if (activeCategory === 'disposition') return unit.disposition.pct ?? 0;
-    if (activeCategory === 'reward') return ((unit.reward ?? 0) / 30) * 100;
+    if (activeCategory === 'reward') return (unit.reward / 30) * 100;
     return (unit.travel.total / maxTravel) * 100;
   }
 
@@ -101,7 +101,9 @@
         : 'Tidak ada disposisi';
     }
     if (activeCategory === 'reward') {
-      return `Kehadiran ${pct(unit.attendance.pct)} · Disposisi ${pct(unit.disposition.pct)}`;
+      const att = unit.attendance.total ? pct(unit.attendance.pct) : '100%*';
+      const disp = unit.disposition.total ? pct(unit.disposition.pct) : '100%*';
+      return `Kehadiran ${att} · Disposisi ${disp}`;
     }
     return `${num(unit.travel.inside)} dalam · ${num(unit.travel.outside)} luar`;
   }
@@ -109,7 +111,7 @@
   function metricDisplay(unit: DashboardUnit): string {
     if (activeCategory === 'attendance') return pct(unit.attendance.pct);
     if (activeCategory === 'disposition') return pct(unit.disposition.pct);
-    if (activeCategory === 'reward') return unit.reward === null ? '—' : decimal(unit.reward);
+    if (activeCategory === 'reward') return decimal(unit.reward);
     return num(unit.travel.total);
   }
 
@@ -118,9 +120,7 @@
     if (activeCategory === 'disposition') {
       return unit.disposition.total ? `Peringkat ${unit.rank.disposition.rank}` : 'Tanpa data';
     }
-    if (activeCategory === 'reward') {
-      return unit.reward === null ? 'Tanpa disposisi' : '/ 30';
-    }
+    if (activeCategory === 'reward') return '/ 30';
     return `${num(unit.travel.days)} hari`;
   }
 
@@ -158,6 +158,7 @@
     <div class="hero-meta">
       <span><Icon name="calendar" size={14} /> {meta.periodLabel}</span>
       <span><Icon name="users" size={14} /> 41 unit</span>
+      <span><Icon name="info" size={14} /> Ringkasan tahunan</span>
     </div>
   </div>
 
@@ -549,8 +550,9 @@
 
     {#if activeCategory === 'reward'}
       <p class="fineprint" style="margin:0 0 0.6rem">
-        Nilai R&amp;P = ((persentase kehadiran + persentase disposisi) ÷ 2) × 30%. Unit tanpa
-        disposisi tidak diberi nilai.
+        Nilai R&amp;P = ((persentase kehadiran + persentase disposisi) ÷ 2) × 30%. Komponen
+        tanpa catatan dianggap 100%. Peringkat ini memakai seluruh periode; penilaian bulanan
+        tersedia di Daftar Perangkat Daerah.
       </p>
     {/if}
 
@@ -593,7 +595,10 @@
     <div>
       <span class="eyebrow gold">Rincian lengkap</span>
       <h2>Lihat rincian 41 Perangkat Daerah.</h2>
-      <p>Cari unit, bandingkan tiga kategori, dan buka profil untuk rincian.</p>
+      <p>
+        Cari unit, bandingkan kategori, dan buka profil untuk rincian. Daftar memakai periode
+        penilaian bulanan secara default.
+      </p>
     </div>
     {#if user}
       <a class="btn primary" href="/perangkat-daerah">

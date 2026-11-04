@@ -1444,6 +1444,30 @@ ol {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
+.range-field select {
+  min-height: 34px;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 650;
+  outline: none;
+}
+
+.range-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.range-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
 .range-dash {
   align-self: center;
   margin-top: 0.9rem;
@@ -3113,15 +3137,19 @@ tr:hover .row-link,
     min-width: 0;
   }
 
-  .range-field input {
+  .range-field input,
+  .range-field select {
     width: 100%;
     min-height: 32px;
     font-size: 0.72rem;
   }
 
-  .range-reset {
+  .range-actions {
     grid-column: 1 / -1;
     justify-self: start;
+  }
+
+  .range-actions .btn {
     min-height: 30px;
   }
 

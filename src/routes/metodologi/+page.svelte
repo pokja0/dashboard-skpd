@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { availableLabel, buildDashboard, defaultRange } from '#lib/dashboard';
+  import { availableLabel, buildDashboard, fullRange } from '#lib/dashboard';
   import { num, dateISO } from '#lib/format';
 
-  const data = buildDashboard(defaultRange.from, defaultRange.to);
+  const data = buildDashboard(fullRange.from, fullRange.to);
 </script>
 
 <svelte:head>
@@ -52,7 +52,10 @@
     <strong>{data.meta.periodLabel}</strong>.
   </p>
   <p>
-    Data tersedia dari <strong>{availableLabel}</strong>. Grafik bulanan mengikuti periode data.
+    Data tersedia dari <strong>{availableLabel}</strong>. Ringkasan memakai seluruh periode data.
+    Halaman Daftar dan Detail memakai periode penilaian bulanan; default-nya bulan lengkap terakhir
+    yang memiliki data kehadiran. Tombol <strong>Bulan berjalan</strong> memilih bulan terakhir yang
+    tersedia pada data.
   </p>
 
   <h2>Indikator</h2>
@@ -82,8 +85,9 @@
     <article class="method-card">
       <h3>Nilai Reward &amp; Punishment</h3>
       <p>
-        Nilai = ((persentase kehadiran + persentase disposisi) ÷ 2) × 30%. Skala nilai 0–30. Unit
-        yang belum memiliki disposisi tidak diberi nilai.
+        Nilai = ((persentase kehadiran + persentase disposisi) ÷ 2) × 30%. Skala nilai 0–30.
+        Komponen yang tidak memiliki catatan kehadiran atau disposisi dianggap 100% agar nilai
+        tetap dapat dihitung.
       </p>
     </article>
     <article class="method-card">
@@ -97,7 +101,8 @@
     <li>Perhitungan dilakukan per unit, bukan per individu.</li>
     <li>Kehadiran, disposisi, dan perjalanan dihitung sendiri-sendiri.</li>
     <li>Kehadiran mencakup status Hadir, Diwakili, Dinas Luar, dan Sakit; komposisi lengkap tetap terlihat pada detail unit.</li>
-    <li>Nilai R&amp;P hanya dihitung untuk unit yang memiliki data disposisi.</li>
+    <li>Komponen kehadiran atau disposisi yang tidak memiliki catatan dianggap 100% pada Nilai R&amp;P.</li>
+    <li>Nilai R&amp;P pada dashboard masih dihitung pada level unit. Penilaian individual memerlukan data masa jabatan kepala yang terverifikasi.</li>
     <li>Nama unit telah dinormalisasi menjadi 41 unit; duplikat dan tanggal tidak konsisten diperbaiki.</li>
     <li>Unit dengan catatan sedikit dapat memiliki persentase yang ekstrem.</li>
     <li>Pada periode ini: {num(data.summary.travel.total)} perjalanan dan {num(data.summary.disposition.pending)} disposisi belum selesai.</li>

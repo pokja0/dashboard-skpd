@@ -296,17 +296,22 @@
     <article class="detail-kpi">
       <div class="detail-kpi-label"><Icon name="target" size={14} /> Nilai Reward &amp; Punishment</div>
       <div class="detail-kpi-value">
-        {unit.reward === null ? '—' : decimal(unit.reward)}
+        {decimal(unit.reward)}
         <small>/ 30</small>
       </div>
       <p class="detail-kpi-sub">
-        {unit.reward === null
-          ? 'Belum ada disposisi untuk dihitung.'
-          : `(${pct(unit.attendance.pct)} + ${pct(unit.disposition.pct)}) ÷ 2 × 30% · peringkat ${rankText(unit.rank.reward.rank, unit.rank.reward.of)}`}
+        ({pct(unit.rewardAttendancePct)}{unit.attendance.total ? '' : '*'}
+        + {pct(unit.rewardDispositionPct)}{unit.disposition.total ? '' : '*'}) ÷ 2 × 30% ·
+        peringkat {rankText(unit.rank.reward.rank, unit.rank.reward.of)}
       </p>
       <div class="metric-track gold" style="margin-top:0.65rem">
-        <span style={`width:${unit.reward === null ? 0 : (unit.reward / 30) * 100}%`}></span>
+        <span style={`width:${(unit.reward / 30) * 100}%`}></span>
       </div>
+      {#if !unit.attendance.total || !unit.disposition.total}
+        <p class="fineprint" style="margin-top:0.5rem">
+          * Komponen tanpa catatan dianggap 100%.
+        </p>
+      {/if}
     </article>
   </section>
 
@@ -537,11 +542,7 @@
             </div>
             <div class="profile-row">
               <dt>Nilai R&amp;P</dt>
-              <dd>
-                {unit.reward === null
-                  ? 'Tidak ada disposisi'
-                  : `${decimal(unit.reward)} / 30 · peringkat ${unit.rank.reward.rank}`}
-              </dd>
+              <dd>{decimal(unit.reward)} / 30 · peringkat {unit.rank.reward.rank}</dd>
             </div>
           </dl>
         </div>

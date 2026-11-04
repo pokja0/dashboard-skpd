@@ -61,7 +61,7 @@ export async function downloadUnitsPdf(
   doc.setFontSize(7.5);
   doc.text(
     pdfText(
-      'Nilai R&P = ((persentase kehadiran + persentase disposisi) / 2) x 30%. Unit tanpa disposisi tidak diberi nilai.'
+      'Nilai R&P = ((persentase kehadiran + persentase disposisi) / 2) x 30%. Komponen tanpa catatan dianggap 100%.'
     ),
     14,
     32
@@ -78,7 +78,7 @@ export async function downloadUnitsPdf(
       unit.disposition.total
         ? `${pct(unit.disposition.pct)} (${num(unit.disposition.done)}/${num(unit.disposition.total)})`
         : 'Tidak ada data',
-      unit.reward === null ? '-' : decimal(unit.reward),
+      decimal(unit.reward),
       `${num(unit.travel.total)} trip | ${num(unit.travel.days)} hari`
     ]),
     styles: { font: 'helvetica', fontSize: 8, cellPadding: 2.2, textColor: [11, 32, 56] },
@@ -124,7 +124,7 @@ export async function downloadUnitsXlsx(
     'Selesai': unit.disposition.done,
     'Total disposisi': unit.disposition.total,
     'Belum selesai': unit.disposition.pending,
-    'Nilai R&P (/30)': unit.reward ?? '',
+    'Nilai R&P (/30)': unit.reward,
     'Perjalanan (trip)': unit.travel.total,
     'Hari perjalanan': unit.travel.days,
     'Luar daerah': unit.travel.outside
@@ -136,7 +136,8 @@ export async function downloadUnitsXlsx(
     { Keterangan: 'Sumber', Nilai: SOURCE },
     {
       Keterangan: 'Rumus Nilai R&P',
-      Nilai: '((persentase kehadiran + persentase disposisi) / 2) x 30%'
+      Nilai:
+        '((persentase kehadiran + persentase disposisi) / 2) x 30%; komponen tanpa catatan dianggap 100%'
     },
     { Keterangan: 'Jumlah unit', Nilai: units.length },
     { Keterangan: 'Diunduh', Nilai: new Date().toLocaleString('id-ID') }
@@ -208,8 +209,8 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
   );
   doc.text(
     pdfText(
-      `Nilai R&P: ${unit.reward === null ? '-' : `${decimal(unit.reward)} / 30`} | ` +
-        'Rumus: ((kehadiran + disposisi) / 2) x 30%'
+      `Nilai R&P: ${decimal(unit.reward)} / 30 | ` +
+        'Rumus: ((kehadiran + disposisi) / 2) x 30%; komponen tanpa catatan = 100%'
     ),
     14,
     50
@@ -348,10 +349,11 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     { Keterangan: 'Disposisi selesai', Nilai: `${unit.disposition.done}/${unit.disposition.total}` },
     { Keterangan: 'Perjalanan', Nilai: `${unit.travel.total} trip / ${unit.travel.days} hari` },
     { Keterangan: 'Luar daerah', Nilai: `${unit.travel.outside} trip` },
-    { Keterangan: 'Nilai R&P (/30)', Nilai: unit.reward ?? 'Tidak ada disposisi' },
+    { Keterangan: 'Nilai R&P (/30)', Nilai: unit.reward },
     {
       Keterangan: 'Rumus Nilai R&P',
-      Nilai: '((persentase kehadiran + persentase disposisi) / 2) x 30%'
+      Nilai:
+        '((persentase kehadiran + persentase disposisi) / 2) x 30%; komponen tanpa catatan dianggap 100%'
     },
     { Keterangan: 'Diunduh', Nilai: new Date().toLocaleString('id-ID') }
   ];

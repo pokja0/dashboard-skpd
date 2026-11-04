@@ -7,8 +7,9 @@ Sulawesi Barat. Sumber data: **Rekap Tim Staf Sekda**.
 
 - **Ringkasan** — tiga indikator utama, tren bulanan, prioritas tindak lanjut, tujuan
   perjalanan dinas, dan peringkat Perangkat Daerah.
-- **Daftar Perangkat Daerah** — pencarian, filter kelompok, filter periode, nomor urut,
-  pengurutan per kategori, serta unduhan PDF dan XLSX.
+- **Daftar Perangkat Daerah** - pencarian, filter kelompok, filter periode bulanan
+  (default bulan lengkap terakhir), nomor urut, pengurutan per kategori, serta unduhan PDF
+  dan XLSX.
 - **Detail unit** — komposisi kehadiran, tren bulanan, grafik tujuan perjalanan,
   daftar lengkap disposisi, perjalanan, dan kehadiran, serta unduhan PDF dan XLSX.
 - **Metodologi** — definisi indikator, periode, dan catatan data.
@@ -61,8 +62,10 @@ Data olahan: `src/lib/data/rekap.json`
 
 Kehadiran dihitung dari status **Hadir, Diwakili, Dinas Luar, dan Sakit**. Rincian seluruh
 status tetap ditampilkan pada halaman detail unit. Nilai Reward & Punishment dihitung dengan
-rumus `((persentase kehadiran + persentase disposisi) / 2) x 30%` dan hanya diberikan kepada
-unit yang memiliki data disposisi.
+rumus `((persentase kehadiran + persentase disposisi) / 2) x 30%`. Jika tidak ada catatan
+kehadiran atau disposisi pada periode yang dipilih, komponen tersebut dianggap 100% agar nilai
+tetap dapat dihitung. Nilai ini masih di level unit; penilaian individual memerlukan data masa
+jabatan kepala yang terverifikasi.
 
 Untuk membangun ulang data olahan (butuh Python 3):
 

@@ -11,7 +11,7 @@ import {
   type MonthPoint,
   type RankInfo
 } from './data';
-import { MONTHS_SHORT } from './format';
+import { MONTHS_LONG, MONTHS_SHORT } from './format';
 
 export interface Range {
   from: string;
@@ -20,14 +20,45 @@ export interface Range {
 
 export const DATA_MIN = dataset.meta.periodStart;
 export const DATA_MAX = dataset.meta.periodEnd;
-export const defaultRange: Range = { from: DATA_MIN, to: DATA_MAX };
+export const RANGE_STORAGE_KEY = 'dashboard-range-v2';
+
+const attendanceMonths = new Set<string>();
+for (const unit of baseUnits) {
+  for (const record of unit.records.attendance) {
+    if (record.d) attendanceMonths.add(record.d.slice(0, 7));
+  }
+}
+
+export const CURRENT_MONTH = DATA_MAX.slice(0, 7);
+export const DEFAULT_MONTH = [...attendanceMonths].sort().at(-1) ?? CURRENT_MONTH;
+
+export function rangeForMonth(month: string): Range {
+  const [year, monthNumber] = month.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  return {
+    from: clampDate(`${month}-01`),
+    to: clampDate(`${month}-${String(lastDay).padStart(2, '0')}`)
+  };
+}
+
+export const defaultRange: Range = rangeForMonth(DEFAULT_MONTH);
+export const fullRange: Range = { from: DATA_MIN, to: DATA_MAX };
 
 export const range = writable<Range>({ ...defaultRange });
+
+export const monthOptions = dataset.meta.months.map((month) => {
+  const index = Number(month.slice(5, 7)) - 1;
+  const label = `${MONTHS_LONG[index] ?? month} ${month.slice(0, 4)}`;
+  return {
+    value: month,
+    label: month === CURRENT_MONTH ? `${label} (berjalan)` : label
+  };
+});
 
 function persistRange(value: Range) {
   if (typeof window === 'undefined') return;
   try {
-    sessionStorage.setItem('dashboard-range', JSON.stringify(value));
+    sessionStorage.setItem(RANGE_STORAGE_KEY, JSON.stringify(value));
   } catch {
     // storage may be unavailable
   }
@@ -72,6 +103,15 @@ export function resetRange() {
   applyRange({ ...defaultRange });
 }
 
+export function setFullRange() {
+  applyRange({ ...fullRange });
+}
+
+export function setMonth(month: string) {
+  if (!/^\d{4}-\d{2}$/.test(month)) return;
+  applyRange(rangeForMonth(month));
+}
+
 function inRange(date: string, from: string, to: string): boolean {
   return !!date && date >= from && date <= to;
 }
@@ -87,6 +127,18 @@ export function formatRange(from: string, to: string): string {
   if (from === to) {
     return `${f.getUTCDate()} ${MONTHS_SHORT[f.getUTCMonth()]} ${f.getUTCFullYear()}`;
   }
+
+  const lastDay = new Date(Date.UTC(f.getUTCFullYear(), f.getUTCMonth() + 1, 0)).getUTCDate();
+  const fullMonth =
+    f.getUTCFullYear() === t.getUTCFullYear() &&
+    f.getUTCMonth() === t.getUTCMonth() &&
+    f.getUTCDate() === 1 &&
+    t.getUTCDate() === lastDay;
+
+  if (fullMonth) {
+    return `${MONTHS_LONG[f.getUTCMonth()]} ${f.getUTCFullYear()}`;
+  }
+
   return `${f.getUTCDate()} ${MONTHS_SHORT[f.getUTCMonth()]}${sameYear ? '' : ` ${f.getUTCFullYear()}`}–${t.getUTCDate()} ${MONTHS_SHORT[t.getUTCMonth()]} ${t.getUTCFullYear()}`;
 }
 
@@ -197,10 +249,13 @@ export function buildDashboard(from: string, to: string): Dashboard {
     const inside = travel.length - outside;
     const attPct = percent(present, attTotal);
     const dispPct = dispTotal ? percent(dispDone, dispTotal) : null;
+    // Komponen yang tidak memiliki catatan dianggap 100% agar nilai R&P tetap ada.
+    const rewardAttendancePct = attTotal ? attPct : 100;
+    const rewardDispositionPct = dispTotal ? (dispPct ?? 100) : 100;
     const reward =
-      dispPct === null
-        ? null
-        : Math.round((((attPct + dispPct) / 2) * 30 / 100) * 10) / 10;
+      Math.round(
+        (((rewardAttendancePct + rewardDispositionPct) / 2) * 30 / 100) * 10
+      ) / 10;
 
     const monthly = {
       attendance: months.map(({ month }) => {
@@ -250,6 +305,8 @@ export function buildDashboard(from: string, to: string): Dashboard {
         pct: dispPct
       },
       reward,
+      rewardAttendancePct,
+      rewardDispositionPct,
       travel: {
         total: travel.length,
         days: travelDays,
@@ -274,9 +331,7 @@ export function buildDashboard(from: string, to: string): Dashboard {
     .filter((unit) => unit.travel.total > 0)
     .map((unit) => ({ id: unit.id, value: unit.travel.total }));
 
-  const rewardEntries = units
-    .filter((unit) => unit.reward !== null)
-    .map((unit) => ({ id: unit.id, value: unit.reward as number }));
+  const rewardEntries = units.map((unit) => ({ id: unit.id, value: unit.reward }));
 
   const attRank = rankBy(attEntries);
   const dispRank = rankBy(dispEntries);

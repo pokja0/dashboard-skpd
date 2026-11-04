@@ -31,7 +31,7 @@
   function metricValue(unit: DashboardUnit): number {
     if (category === 'attendance') return unit.attendance.pct;
     if (category === 'disposition') return unit.disposition.pct ?? -1;
-    if (category === 'reward') return unit.reward ?? -1;
+    if (category === 'reward') return unit.reward;
     return unit.travel.total;
   }
 
@@ -270,11 +270,11 @@
             <td>
               <div class="metric-cell">
                 <div class="metric-line">
-                  <strong>{unit.reward === null ? '—' : decimal(unit.reward)}</strong>
-                  <span>{unit.reward === null ? 'tanpa disposisi' : '/ 30'}</span>
+                  <strong>{decimal(unit.reward)}</strong>
+                  <span>{unit.disposition.total ? '/ 30' : '/ 30*'}</span>
                 </div>
                 <div class="metric-track gold">
-                  <span style={`width:${unit.reward === null ? 0 : (unit.reward / 30) * 100}%`}></span>
+                  <span style={`width:${(unit.reward / 30) * 100}%`}></span>
                 </div>
               </div>
             </td>
@@ -308,6 +308,11 @@
     </div>
   </div>
 
+  <p class="fineprint" style="margin-top:0.6rem">
+    * Komponen kehadiran atau disposisi yang tidak memiliki catatan dianggap 100% pada
+    perhitungan Nilai R&amp;P.
+  </p>
+
   <div class="unit-cards" aria-label="Daftar Perangkat Daerah">
     {#each filtered as unit, index}
       <a class="unit-card" href={`/perangkat-daerah/${unit.id}`}>
@@ -334,8 +339,8 @@
           </div>
           <div class="unit-card-metric">
             <span>Nilai R&amp;P</span>
-            <strong>{unit.reward === null ? '—' : decimal(unit.reward)}</strong>
-            <small>{unit.reward === null ? 'tanpa disposisi' : '/ 30'}</small>
+            <strong>{decimal(unit.reward)}</strong>
+            <small>{unit.disposition.total ? '/ 30' : '/ 30*'}</small>
           </div>
           <div class="unit-card-metric">
             <span>Trip</span>

@@ -589,17 +589,17 @@ disp_rank = rank([(u[0], round(disp_unit[u[0]]['done'] / disp_unit[u[0]]['total'
 trav_rank = rank([(u[0], travel[u[0]]['total']) for u in UNITS])
 
 def reward_score(att_pct, disp_pct):
-    if disp_pct is None:
-        return None
-    return round(((att_pct + disp_pct) / 2) * 30 / 100, 1)
+    # Komponen yang tidak memiliki catatan dianggap 100% agar nilai R&P tetap ada.
+    att_value = 100 if att_pct is None else att_pct
+    disp_value = 100 if disp_pct is None else disp_pct
+    return round(((att_value + disp_value) / 2) * 30 / 100, 1)
 
 reward_rank = rank([
     (u[0], reward_score(
-        round(attendance[u[0]]['present'] / attendance[u[0]]['total'] * 100, 1) if attendance[u[0]]['total'] else 0,
+        round(attendance[u[0]]['present'] / attendance[u[0]]['total'] * 100, 1) if attendance[u[0]]['total'] else None,
         round(disp_unit[u[0]]['done'] / disp_unit[u[0]]['total'] * 100, 1) if disp_unit[u[0]]['total'] else None,
     ))
     for u in UNITS
-    if disp_unit[u[0]]['total']
 ])
 
 units = []
@@ -619,7 +619,7 @@ for uid, short, full, head, group in UNITS:
             'total': d_total, 'done': d['done'], 'pending': d['pending'],
             'pct': d_pct,
         },
-        'reward': reward_score(a_pct, d_pct),
+        'reward': reward_score(a_pct if a_total else None, d_pct),
         'travel': {
             'total': t_total, 'days': t['days'], 'inside': t['inside'], 'outside': t['outside'],
             'outsidePct': round(100 * t['outside'] / t_total, 1) if t_total else 0,

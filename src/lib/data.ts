@@ -146,7 +146,7 @@ export interface Unit {
   name: string;
   head: string;
   group: 'Sekretariat Daerah' | 'Badan' | 'Dinas' | 'Lembaga';
-  reward?: number | null;
+  reward?: number;
   attendance: {
     total: number;
     present: number;
@@ -184,7 +184,9 @@ export interface Unit {
 
 export interface DashboardUnit extends Unit {
   destinations: DestinationCount[];
-  reward: number | null;
+  reward: number;
+  rewardAttendancePct: number;
+  rewardDispositionPct: number;
 }
 
 export interface Dataset {
