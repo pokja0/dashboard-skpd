@@ -109,6 +109,7 @@
 html {
   font-size: 17px;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
   scroll-behavior: smooth;
   scroll-padding-top: 96px;
 }
@@ -1199,7 +1200,7 @@ ol {
 
 .attention-grid {
   display: grid;
-  grid-template-columns: 1.12fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 0.9rem;
   align-items: stretch;
 }
@@ -1755,7 +1756,7 @@ ol {
 /* ---------------- attention panels ---------------- */
 
 .attention-grid.two {
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
 }
 
 .attention-grid.two .attention-panel:first-child {
@@ -3266,12 +3267,44 @@ tr:hover .row-link,
   .kpi-grid,
   .chart-grid,
   .insight-grid,
-  .attention-grid {
-    grid-template-columns: 1fr;
+  .attention-grid,
+  .attention-grid.two {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .attention-panel:first-child {
+  .attention-panel:first-child,
+  .attention-grid.two .attention-panel:first-child {
     grid-column: auto;
+  }
+
+  /* Panel tindak lanjut memakai padding lebih ringkas di ponsel agar
+     chip status dan legenda tidak mendorong lebar halaman. */
+  .panel-head,
+  .panel-body {
+    padding-inline: 1rem;
+  }
+
+  .panel-head {
+    gap: 0.35rem 0.6rem;
+  }
+
+  .panel-head .chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .status-legend li {
+    grid-template-columns: 8px minmax(0, 1fr) auto;
+    gap: 0.4rem;
+  }
+
+  .status-legend li > span:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .status-legend .count {
+    white-space: nowrap;
   }
 
   .kpi-card {
