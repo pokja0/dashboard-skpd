@@ -43,18 +43,19 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <div class="brand-group">
-      <a class="brand" href="/">
+      <a
+        class="brand"
+        href="/"
+        aria-label="Pemerintah Provinsi Sulawesi Barat"
+        title="Pemerintah Provinsi Sulawesi Barat"
+      >
         <img
           class="brand-logo"
           src="/logo-sulbar.svg"
           alt="Lambang Provinsi Sulawesi Barat"
-          width="48"
-          height="48"
+          width="44"
+          height="44"
         />
-        <span class="brand-text">
-          <strong>Pemprov Sulawesi Barat</strong>
-          <span>Dashboard Kinerja Perangkat Daerah</span>
-        </span>
       </a>
       <a
         class="vision-mark"
