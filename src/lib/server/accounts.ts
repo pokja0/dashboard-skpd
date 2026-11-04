@@ -25,6 +25,10 @@ export interface PublicAccount {
 
 const ACCOUNTS_FILE =
   process.env.ACCOUNTS_FILE ?? path.join(process.cwd(), 'data', 'accounts.json');
+const IS_SERVERLESS = Boolean(process.env.VERCEL);
+const ACCOUNTS_JSON = process.env.ACCOUNTS_JSON;
+
+export const canCreateAccounts = !IS_SERVERLESS;
 
 function hashPassword(password: string, salt: string): string {
   return scryptSync(password, salt, 64).toString('hex');
@@ -35,22 +39,45 @@ function writeAccounts(accounts: Account[]) {
   writeFileSync(ACCOUNTS_FILE, JSON.stringify({ accounts }, null, 2), 'utf8');
 }
 
-function seedAccounts(): Account[] {
+function envAccount(): Account {
   const username = (process.env.SUPERADMIN_USERNAME ?? 'diskusidc6').trim();
   const password = process.env.SUPERADMIN_PASSWORD ?? 'Sulbar2026!';
-  const salt = randomBytes(16).toString('hex');
-  const account: Account = {
+  const salt = process.env.SUPERADMIN_SALT ?? 'sulbar-vercel-superadmin-v1';
+  return {
     username,
     role: 'superadmin',
     salt,
     hash: hashPassword(password, salt),
-    createdAt: new Date().toISOString()
+    createdAt: process.env.SUPERADMIN_CREATED_AT ?? '2026-01-01T00:00:00.000Z'
   };
-  writeAccounts([account]);
-  return [account];
+}
+
+function seedAccounts(): Account[] {
+  const account = envAccount();
+  const localAccount: Account = {
+    ...account,
+    salt: randomBytes(16).toString('hex')
+  };
+  localAccount.hash = hashPassword(
+    process.env.SUPERADMIN_PASSWORD ?? 'Sulbar2026!',
+    localAccount.salt
+  );
+  writeAccounts([localAccount]);
+  return [localAccount];
 }
 
 function readAccounts(): Account[] {
+  if (ACCOUNTS_JSON) {
+    try {
+      const parsed = JSON.parse(ACCOUNTS_JSON) as Account[] | { accounts?: Account[] };
+      const accounts = Array.isArray(parsed) ? parsed : parsed.accounts;
+      if (Array.isArray(accounts) && accounts.length > 0) return accounts;
+    } catch {
+      // fall through to serverless/local storage
+    }
+  }
+
+  if (IS_SERVERLESS) return [envAccount()];
   if (!existsSync(ACCOUNTS_FILE)) return seedAccounts();
   try {
     const parsed = JSON.parse(readFileSync(ACCOUNTS_FILE, 'utf8')) as {
@@ -96,6 +123,14 @@ export function createAccount(
   password: string,
   role: Role = 'user'
 ): { ok: true; account: PublicAccount } | { ok: false; error: string } {
+  if (!canCreateAccounts) {
+    return {
+      ok: false,
+      error:
+        'Pembuatan akun tidak tersedia di deployment Vercel. Gunakan environment variable atau database.'
+    };
+  }
+
   const name = username.trim();
   if (!/^[a-zA-Z0-9._-]{3,32}$/.test(name)) {
     return {

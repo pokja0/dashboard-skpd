@@ -110,6 +110,38 @@ bun run data:sync:build
 lalu restart proses `bun run start`. URL CSV dapat diganti lewat environment variable
 `SHEET_CSV_URL`.
 
+## Deploy ke Vercel
+
+Build lokal memakai `@sveltejs/adapter-node`; saat build di Vercel, konfigurasi otomatis
+memakai `@sveltejs/adapter-vercel`.
+
+Langkah deploy:
+
+1. Hubungkan repositori GitHub ke Vercel.
+2. Atur environment variable di Vercel:
+   - `SUPERADMIN_USERNAME` — default `diskusidc6`
+   - `SUPERADMIN_PASSWORD` — wajib diatur
+   - `AUTH_SECRET` — wajib diatur, gunakan string acak panjang
+3. Deploy. Vercel akan menjalankan `bun run build`.
+4. Aktifkan GitHub Actions pada repositori. Workflow
+   `.github/workflows/sync-sheet.yml` berjalan setiap 10 menit, menarik data dari Google
+   Sheet, lalu melakukan commit bila ada perubahan. Commit tersebut memicu deploy otomatis
+   Vercel.
+
+Dengan cara ini data diperbarui tanpa restart manual, dengan jeda sekitar 5–15 menit
+tergantung jadwal GitHub Actions dan waktu build Vercel.
+
+Catatan Vercel:
+
+- `data/accounts.json` tidak dipakai karena filesystem Vercel read-only. Akun superadmin
+  dibaca dari environment variable.
+- Pembuatan akun pengguna dinonaktifkan di Vercel. Untuk akun pengguna, diperlukan
+  database eksternal (misalnya Neon Postgres atau Upstash Redis).
+- CSV mentah ikut dibundel saat build sehingga halaman data mentah dan unduhan CSV tetap
+  berfungsi.
+- Untuk data yang benar-benar real-time tanpa deploy ulang, pipeline perlu dipindahkan ke
+  runtime API dan memakai database untuk akun.
+
 ## Teknologi
 
 - SvelteKit 3 + Svelte 5

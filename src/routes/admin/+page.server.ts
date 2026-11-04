@@ -1,9 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { createAccount, listAccounts } from '#lib/server/accounts';
+import { canCreateAccounts, createAccount, listAccounts } from '#lib/server/accounts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => ({
-  accounts: listAccounts()
+  accounts: listAccounts(),
+  canCreateAccounts
 });
 
 export const actions: Actions = {

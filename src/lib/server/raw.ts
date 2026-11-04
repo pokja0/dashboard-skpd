@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { parse } from 'csv-parse/sync';
+import rawCsv from '../../../data/rekap-tim-staf-sekda.csv?raw';
 
 export interface RawRow {
   row: number;
@@ -14,11 +14,25 @@ interface RawData {
 
 let cache: RawData | null = null;
 
+function csvText(): string {
+  if (process.env.REKAP_CSV) {
+    try {
+      return readFileSync(process.env.REKAP_CSV, 'utf8');
+    } catch {
+      // fall back to the CSV bundled at build time
+    }
+  }
+  return rawCsv;
+}
+
+export function getRawCsv(): string {
+  return csvText();
+}
+
 export function getRawData(): RawData {
   if (cache) return cache;
 
-  const file = process.env.REKAP_CSV ?? path.join(process.cwd(), 'data', 'rekap-tim-staf-sekda.csv');
-  const parsed = parse(readFileSync(file, 'utf8'), {
+  const parsed = parse(csvText(), {
     columns: false,
     skip_empty_lines: true,
     relax_column_count: true

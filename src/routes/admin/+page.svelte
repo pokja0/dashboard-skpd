@@ -127,7 +127,9 @@
         <h3>Buat akun pengguna</h3>
         <p>Akun baru dapat mengakses menu Perangkat Daerah.</p>
       </div>
-      <span class="chip primary">Role: pengguna</span>
+      {#if data.canCreateAccounts}
+        <span class="chip primary">Role: pengguna</span>
+      {/if}
     </div>
     <div class="panel-body">
       {#if form?.error}
@@ -143,33 +145,43 @@
         </div>
       {/if}
 
-      <form method="POST" action="?/create" class="admin-form">
-        <label class="field">
-          <span>Username</span>
-          <input
-            type="text"
-            name="username"
-            value={form?.username ?? ''}
-            placeholder="contoh: operator.setda"
-            autocomplete="off"
-            required
-          />
-        </label>
-        <label class="field">
-          <span>Kata sandi awal</span>
-          <input
-            type="password"
-            name="password"
-            minlength="8"
-            placeholder="Minimal 8 karakter"
-            autocomplete="new-password"
-            required
-          />
-        </label>
-        <button class="btn primary" type="submit">
-          <Icon name="users" size={15} /> Buat akun
-        </button>
-      </form>
+      {#if data.canCreateAccounts}
+        <form method="POST" action="?/create" class="admin-form">
+          <label class="field">
+            <span>Username</span>
+            <input
+              type="text"
+              name="username"
+              value={form?.username ?? ''}
+              placeholder="contoh: operator.setda"
+              autocomplete="off"
+              required
+            />
+          </label>
+          <label class="field">
+            <span>Kata sandi awal</span>
+            <input
+              type="password"
+              name="password"
+              minlength="8"
+              placeholder="Minimal 8 karakter"
+              autocomplete="new-password"
+              required
+            />
+          </label>
+          <button class="btn primary" type="submit">
+            <Icon name="users" size={15} /> Buat akun
+          </button>
+        </form>
+      {:else}
+        <div class="callout">
+          <Icon name="info" size={17} />
+          <span>
+            Pembuatan akun dinonaktifkan di deployment Vercel. Akun superadmin diatur melalui
+            environment variable. Untuk akun pengguna, diperlukan database eksternal.
+          </span>
+        </div>
+      {/if}
     </div>
   </article>
 
