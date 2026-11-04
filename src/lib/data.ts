@@ -33,8 +33,35 @@ export interface TravelRecord {
   end: string;
   days: number;
   kind: string;
+  name: string;
   dest: string;
   subject: string;
+}
+
+export interface LeadershipPeriod {
+  name: string;
+  role: string;
+  from: string;
+  to: string;
+  verified: boolean;
+  note?: string;
+}
+
+export interface HeadCandidateName {
+  name: string;
+  count: number;
+  first: string;
+  last: string;
+  rows: number[];
+}
+
+export interface HeadChangeCandidate {
+  unitId: string;
+  unitShort: string;
+  names: HeadCandidateName[];
+  rows: number[];
+  kind: 'change' | 'variant';
+  note: string;
 }
 
 export interface Meeting {
@@ -93,6 +120,7 @@ export interface Audit {
   };
   dateFixes: AuditDateFix[];
   missingNames: AuditMissingName[];
+  headChanges: HeadChangeCandidate[];
   excludedDispositions: {
     count: number;
     byTarget: Array<{ target: string; count: number }>;
@@ -147,6 +175,10 @@ export interface Unit {
   head: string;
   group: 'Sekretariat Daerah' | 'Badan' | 'Dinas' | 'Lembaga';
   reward?: number;
+  leadership?: LeadershipPeriod[];
+  headChanged?: boolean;
+  headCandidates?: HeadCandidateName[];
+  headChangeNote?: string;
   attendance: {
     total: number;
     present: number;

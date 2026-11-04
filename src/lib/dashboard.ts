@@ -20,17 +20,10 @@ export interface Range {
 
 export const DATA_MIN = dataset.meta.periodStart;
 export const DATA_MAX = dataset.meta.periodEnd;
-export const RANGE_STORAGE_KEY = 'dashboard-range-v2';
-
-const attendanceMonths = new Set<string>();
-for (const unit of baseUnits) {
-  for (const record of unit.records.attendance) {
-    if (record.d) attendanceMonths.add(record.d.slice(0, 7));
-  }
-}
+export const RANGE_STORAGE_KEY = 'dashboard-range-v3';
 
 export const CURRENT_MONTH = DATA_MAX.slice(0, 7);
-export const DEFAULT_MONTH = [...attendanceMonths].sort().at(-1) ?? CURRENT_MONTH;
+export const DEFAULT_MONTH = CURRENT_MONTH;
 
 export function rangeForMonth(month: string): Range {
   const [year, monthNumber] = month.split('-').map(Number);
@@ -41,12 +34,20 @@ export function rangeForMonth(month: string): Range {
   };
 }
 
+export function monthForRange(value: Range): string | null {
+  for (const month of dataset.meta.months) {
+    const bounds = rangeForMonth(month);
+    if (bounds.from === value.from && bounds.to === value.to) return month;
+  }
+  return null;
+}
+
 export const defaultRange: Range = rangeForMonth(DEFAULT_MONTH);
 export const fullRange: Range = { from: DATA_MIN, to: DATA_MAX };
 
 export const range = writable<Range>({ ...defaultRange });
 
-export const monthOptions = dataset.meta.months.map((month) => {
+export const monthOptions = [...dataset.meta.months].reverse().map((month) => {
   const index = Number(month.slice(5, 7)) - 1;
   const label = `${MONTHS_LONG[index] ?? month} ${month.slice(0, 4)}`;
   return {

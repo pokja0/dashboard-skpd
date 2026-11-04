@@ -10,7 +10,7 @@ Default output : src/lib/data/rekap.json
 The source may be a plain CSV export or a text dump that contains the CSV
 after some metadata. Only the standard library is used.
 """
-import csv, io, json, os, re, sys, unicodedata
+import csv, difflib, io, json, os, re, sys, unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -41,7 +41,7 @@ UNITS = [
     ("asisten-1", "Asisten I", "Asisten I Pemerintahan dan Kesejahteraan Rakyat Sekretariat Daerah", "MUH. JAUN, S.I.P., MM.", "Sekretariat Daerah"),
     ("pu", "PU & Penataan Ruang", "Dinas Pekerjaan Umum dan Penataan Ruang", "SURYA YULIAWAN SARIFUDDIN, ST, MM", "Dinas"),
     ("satpol", "Satpol PP & Damkar", "Satuan Polisi Pamong Praja dan Pemadam Kebakaran", "Drs. AKSAN, M.M.", "Lembaga"),
-    ("dpmptsp", "DPMPTSP", "Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu", "AMIR, S.Sos, MM", "Dinas"),
+    ("dpmptsp", "DPMPTSP", "Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu", "Drs. KAIN LOTONG SEMBE, M.M", "Dinas"),
     ("dlhk", "DLHK", "Dinas Lingkungan Hidup dan Kehutanan", "H.ZULKIFLI MANGGAZALI, SE, M.Si", "Dinas"),
     ("bpbd", "BPBD", "Badan Penanggulangan Bencana Daerah", "MUHAMMAD YASIR FATTAH, SE, M.Si", "Badan"),
     ("esdm", "ESDM", "Dinas Energi dan Sumber Daya Mineral", "BUJAERAMY HASAN, SH., M.Si", "Dinas"),
@@ -147,7 +147,7 @@ HEAD_ALIASES = [
     ('asisten-1', ['muhjaun', 'jaun']),
     ('pu', ['suryayulianwan', 'suryayuliawan']),
     ('satpol', ['aksan']),
-    ('dpmptsp', ['amir']),
+    ('dpmptsp', ['amir', 'kainlotongsembe', 'kainlotongsambe']),
     ('dlhk', ['zulkiflimanggazali']),
     ('bpbd', ['yasirfattah']),
     ('esdm', ['bujaeramy', 'kainlotongsambe']),
@@ -174,6 +174,39 @@ def map_head(text):
         if any(k.replace(' ', '') in t for k in keys):
             return uid
     return None
+
+# Riwayat kepala yang sudah dicatat sebagai draft. Tanggal masih perlu
+# diverifikasi ke sumber resmi; status verified tetap False sampai dicek.
+LEADERSHIP = {
+    'dpmptsp': [
+        {
+            'name': 'AMIR, S.Sos, MM',
+            'role': 'Plt. Kepala',
+            'from': '2026-01-02',
+            'to': '2026-03-10',
+            'verified': False,
+            'note': 'Label absensi Plt. sampai 9 Mar 2026; perjalanan 23 Feb 2026.',
+        },
+        {
+            'name': 'Drs. KAIN LOTONG SEMBE, M.M',
+            'role': 'Kepala',
+            'from': '2026-03-11',
+            'to': '2026-11-03',
+            'verified': False,
+            'note': 'Label absensi Kepala mulai 11 Mar 2026; perjalanan 12 Mar 2026.',
+        },
+    ],
+}
+
+NAME_TITLES = {
+    'dr', 'drs', 'dra', 'hj', 'h', 'ir', 'prof', 'drg', 's', 'si', 'ip',
+    'se', 'mm', 'msi', 'm', 'pd', 'spi', 'skg', 'map', 'sh', 'st', 'mt',
+    'msc', 'cfra', 'sos', 'sip', 'sp', 'ma', 'a', 'ssos', 'sip', 'se',
+}
+
+def person_key(name):
+    tokens = [w for w in norm(name).split() if w not in NAME_TITLES and len(w) > 1]
+    return ' '.join(tokens)
 
 DEST_ALIASES = {
     'polman': 'Polewali Mandar',
@@ -454,9 +487,65 @@ for r in trav:
     })
     trav_records[uid].append({
         'd': iso(d), 'end': iso(end), 'days': days, 'kind': kind,
-        'dest': canon_destination(r[20]), 'subject': r[19].strip(),
+        'name': r[16].strip(), 'dest': canon_destination(r[20]), 'subject': r[19].strip(),
     })
     destinations[canon_destination(r[20])] += 1
+
+# ---------------- head-change candidates ----------------
+name_groups = defaultdict(lambda: defaultdict(lambda: {'name': '', 'rows': [], 'dates': []}))
+for row_no, r in enumerate(data, start=2):
+    raw_name = r[16].strip()
+    if not raw_name or not r[22].strip():
+        continue
+    uid = map_unit(r[17]) or map_head(raw_name)
+    d = dparse(r[22])
+    if not uid or not d:
+        continue
+    key = person_key(raw_name)
+    if not key:
+        continue
+    entry = name_groups[uid][key]
+    entry['name'] = raw_name
+    entry['rows'].append(row_no)
+    entry['dates'].append(iso(d))
+
+head_changes = []
+for uid, groups in name_groups.items():
+    if len(groups) <= 1:
+        continue
+    names = []
+    for entry in groups.values():
+        dates = sorted(entry['dates'])
+        names.append({
+            'name': entry['name'],
+            'count': len(entry['rows']),
+            'first': dates[0],
+            'last': dates[-1],
+            'rows': sorted(entry['rows']),
+        })
+    names.sort(key=lambda x: (x['first'], x['name']))
+    keys = list(groups.keys())
+    similarity = min(
+        difflib.SequenceMatcher(None, a, b).ratio()
+        for index, a in enumerate(keys)
+        for b in keys[index + 1:]
+    )
+    kind = 'change' if similarity < 0.5 else 'variant'
+    note = 'Perlu verifikasi tanggal jabatan dan status Plt./definitif.'
+    if kind == 'variant':
+        note = 'Kemungkinan varian ejaan nama yang sama; cek konsistensi penulisan.'
+    if uid == 'dpmptsp':
+        note = 'AMIR tercatat sebagai Plt. sampai 9 Mar 2026; KAIN tercatat sebagai Kepala mulai 11 Mar 2026. Baris AMIR pada Jun–Agu perlu dicek.'
+    head_changes.append({
+        'unitId': uid,
+        'unitShort': UNIT_BY_ID[uid][1],
+        'names': names,
+        'rows': sorted({row for n in names for row in n['rows']}),
+        'kind': kind,
+        'note': note,
+    })
+head_changes.sort(key=lambda x: x['unitShort'])
+head_change_by_unit = {item['unitId']: item for item in head_changes}
 
 # ---------------- audit ----------------
 DATE_COLUMNS = {
@@ -501,6 +590,7 @@ audit = {
     },
     'dateFixes': date_fixes,
     'missingNames': trav_missing_names,
+    'headChanges': head_changes,
     'excludedDispositions': {
         'count': len(disp_excluded_rows),
         'byTarget': [{'target': k, 'count': v} for k, v in disp_excluded.most_common()],
@@ -620,6 +710,12 @@ for uid, short, full, head, group in UNITS:
             'pct': d_pct,
         },
         'reward': reward_score(a_pct if a_total else None, d_pct),
+        'leadership': LEADERSHIP.get(uid, []),
+        'headChanged': bool(LEADERSHIP.get(uid)) or (
+            uid in head_change_by_unit and head_change_by_unit[uid]['kind'] == 'change'
+        ),
+        'headCandidates': head_change_by_unit.get(uid, {}).get('names', []),
+        'headChangeNote': head_change_by_unit.get(uid, {}).get('note', ''),
         'travel': {
             'total': t_total, 'days': t['days'], 'inside': t['inside'], 'outside': t['outside'],
             'outsidePct': round(100 * t['outside'] / t_total, 1) if t_total else 0,

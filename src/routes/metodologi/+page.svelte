@@ -53,9 +53,9 @@
   </p>
   <p>
     Data tersedia dari <strong>{availableLabel}</strong>. Ringkasan memakai seluruh periode data.
-    Halaman Daftar dan Detail memakai periode penilaian bulanan; default-nya bulan lengkap terakhir
-    yang memiliki data kehadiran. Tombol <strong>Bulan berjalan</strong> memilih bulan terakhir yang
-    tersedia pada data.
+    Halaman Daftar dan Detail memakai periode penilaian bulanan; default-nya bulan terkini, dengan
+    pilihan bulan berurutan mundur sampai Januari. Pilih <strong>Rentang khusus</strong> bila perlu
+    menentukan tanggal awal dan akhir sendiri.
   </p>
 
   <h2>Indikator</h2>
@@ -103,6 +103,7 @@
     <li>Kehadiran mencakup status Hadir, Diwakili, Dinas Luar, dan Sakit; komposisi lengkap tetap terlihat pada detail unit.</li>
     <li>Komponen kehadiran atau disposisi yang tidak memiliki catatan dianggap 100% pada Nilai R&amp;P.</li>
     <li>Nilai R&amp;P pada dashboard masih dihitung pada level unit. Penilaian individual memerlukan data masa jabatan kepala yang terverifikasi.</li>
+    <li>Beberapa unit memiliki lebih dari satu nama kepala pada data perjalanan. Riwayat atau kandidatnya ditampilkan di detail unit dan halaman superadmin dengan status <strong>perlu verifikasi</strong>.</li>
     <li>Nama unit telah dinormalisasi menjadi 41 unit; duplikat dan tanggal tidak konsisten diperbaiki.</li>
     <li>Unit dengan catatan sedikit dapat memiliki persentase yang ekstrem.</li>
     <li>Pada periode ini: {num(data.summary.travel.total)} perjalanan dan {num(data.summary.disposition.pending)} disposisi belum selesai.</li>

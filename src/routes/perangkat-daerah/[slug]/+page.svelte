@@ -24,6 +24,9 @@
   );
   const summary = $derived($dashboard.summary);
   const periodLabel = $derived($dashboard.meta.periodLabel);
+  const leadershipVerified = $derived(
+    !!unit.leadership?.length && unit.leadership.every((period) => period.verified)
+  );
 
   let activeList = $state<'dispositions' | 'travel' | 'attendance'>('dispositions');
 
@@ -208,6 +211,9 @@
         <div class="page-head-meta" style="margin-top:0">
           <span class="chip primary">{unit.group}</span>
           <span class="chip">{periodLabel}</span>
+          {#if unit.headChanged}
+            <span class="chip danger"><Icon name="alert" size={13} /> Pergantian kepala</span>
+          {/if}
         </div>
         <h1>{unit.short}</h1>
         <p class="full-name">{unit.name}</p>
@@ -467,7 +473,8 @@
                       </div>
                     </div>
                     <div class="record-line-meta">
-                      {dateISO(item.d)}–{dateISO(item.end)} · {truncate(item.subject, 110)}
+                      {truncate(item.name, 42)} · {dateISO(item.d)}–{dateISO(item.end)} ·
+                      {truncate(item.subject, 110)}
                     </div>
                   </div>
                 </article>
@@ -547,6 +554,59 @@
           </dl>
         </div>
       </section>
+
+      {#if unit.leadership?.length || unit.headCandidates?.length}
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Riwayat Kepala</h3>
+              <p>
+                {unit.leadership?.length
+                  ? 'Periode kepala dalam data 2026'
+                  : 'Kandidat dari nama pada data perjalanan'}
+              </p>
+            </div>
+            <span class:primary={leadershipVerified} class:danger={!leadershipVerified} class="chip">
+              {leadershipVerified ? 'Terverifikasi' : 'Perlu verifikasi'}
+            </span>
+          </div>
+          <div class="panel-body">
+            {#if unit.leadership?.length}
+              <ol class="leadership-list">
+                {#each unit.leadership as period}
+                  <li class="leadership-item">
+                    <div class="leadership-top">
+                      <strong>{period.name}</strong>
+                      <span class="chip">{period.role}</span>
+                    </div>
+                    <p>{dateISO(period.from)} – {dateISO(period.to)}</p>
+                    <small>
+                      {period.verified ? 'Terverifikasi' : 'Draft, menunggu verifikasi'}
+                      {#if period.note}· {period.note}{/if}
+                    </small>
+                  </li>
+                {/each}
+              </ol>
+            {:else}
+              <ul class="leadership-list">
+                {#each unit.headCandidates ?? [] as candidate}
+                  <li class="leadership-item">
+                    <strong>{candidate.name}</strong>
+                    <p>
+                      {dateISO(candidate.first)} – {dateISO(candidate.last)} ·
+                      {candidate.count} catatan perjalanan
+                    </p>
+                    <small>Baris: {candidate.rows.join(', ')}</small>
+                  </li>
+                {/each}
+              </ul>
+              {#if unit.headChangeNote}
+                <p class="fineprint" style="margin-top:0.6rem">{unit.headChangeNote}</p>
+              {/if}
+            {/if}
+          </div>
+        </section>
+      {/if}
 
       <section class="panel">
         <div class="panel-head">

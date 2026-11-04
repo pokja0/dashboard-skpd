@@ -8,22 +8,27 @@
     dashboard,
     DATA_MAX,
     DATA_MIN,
+    monthForRange,
     monthOptions,
     range,
     RANGE_STORAGE_KEY,
     setFrom,
-    setFullRange,
     setMonth,
     setRange,
     setTo
   } from '#lib/dashboard';
+
+  let forceCustom = $state(false);
 
   onMount(() => {
     const saved = sessionStorage.getItem(RANGE_STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as { from?: string; to?: string };
-        if (parsed.from && parsed.to) setRange(parsed.from, parsed.to);
+        if (parsed.from && parsed.to) {
+          setRange(parsed.from, parsed.to);
+          forceCustom = monthForRange({ from: parsed.from, to: parsed.to }) === null;
+        }
       } catch {
         // ignore invalid stored value
       }
@@ -33,28 +38,33 @@
   });
 
   const selectedMonth = $derived(
-    $range.from.slice(0, 7) === $range.to.slice(0, 7)
-      ? $range.from.slice(0, 7)
-      : 'custom'
+    forceCustom ? 'custom' : (monthForRange($range) ?? 'custom')
   );
-
+  const isCustom = $derived(selectedMonth === 'custom');
   const isCurrentPartial = $derived(
     $range.from.slice(0, 7) === CURRENT_MONTH && $range.to === DATA_MAX
   );
 
   function onMonthChange(event: Event) {
     const select = event.currentTarget as HTMLSelectElement;
-    if (select.value !== 'custom') setMonth(select.value);
+    if (select.value === 'custom') {
+      forceCustom = true;
+      return;
+    }
+    forceCustom = false;
+    setMonth(select.value);
   }
 
   function onFromChange(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
+    forceCustom = true;
     setFrom(input.value);
     input.value = get(range).from;
   }
 
   function onToChange(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
+    forceCustom = true;
     setTo(input.value);
     input.value = get(range).to;
   }
@@ -66,7 +76,7 @@
     <div>
       <strong>Periode penilaian</strong>
       <span aria-live="polite">
-        {$dashboard.meta.periodLabel} · {$dashboard.meta.days} hari {#if isCurrentPartial}· belum lengkap, R&amp;P sementara{/if}
+        {$dashboard.meta.periodLabel} · {$dashboard.meta.days} hari {#if isCurrentPartial}· belum lengkap{/if}
       </span>
     </div>
   </div>
@@ -78,49 +88,34 @@
         {#each monthOptions as option}
           <option value={option.value}>{option.label}</option>
         {/each}
-        {#if selectedMonth === 'custom'}
-          <option value="custom">Rentang khusus</option>
-        {/if}
+        <option value="custom">Rentang khusus</option>
       </select>
     </label>
 
-    <label class="range-field">
-      <span>Mulai</span>
-      <input
-        type="date"
-        min={DATA_MIN}
-        max={DATA_MAX}
-        value={$range.from}
-        onchange={onFromChange}
-      />
-    </label>
-    <span class="range-dash" aria-hidden="true">–</span>
-    <label class="range-field">
-      <span>Selesai</span>
-      <input
-        type="date"
-        min={DATA_MIN}
-        max={DATA_MAX}
-        value={$range.to}
-        onchange={onToChange}
-      />
-    </label>
-
-    <div class="range-actions">
-      <button
-        class="btn ghost small"
-        type="button"
-        onclick={() => setMonth(CURRENT_MONTH)}
-      >
-        <Icon name="calendar" size={13} /> Bulan berjalan
-      </button>
-      <button class="btn ghost small" type="button" onclick={setFullRange}>
-        Semua data
-      </button>
-    </div>
+    {#if isCustom}
+      <label class="range-field">
+        <span>Mulai</span>
+        <input
+          type="date"
+          min={DATA_MIN}
+          max={DATA_MAX}
+          value={$range.from}
+          onchange={onFromChange}
+        />
+      </label>
+      <span class="range-dash" aria-hidden="true">–</span>
+      <label class="range-field">
+        <span>Selesai</span>
+        <input
+          type="date"
+          min={DATA_MIN}
+          max={DATA_MAX}
+          value={$range.to}
+          onchange={onToChange}
+        />
+      </label>
+    {/if}
   </div>
 
-  <span class="range-available">
-    Data tersedia {availableLabel} · default bulan lengkap terakhir
-  </span>
+  <span class="range-available">Data tersedia {availableLabel}</span>
 </section>

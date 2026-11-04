@@ -67,12 +67,21 @@ export async function downloadUnitsPdf(
     32
   );
 
+  const headChangeCount = units.filter((unit) => unit.headChanged).length;
+  if (headChangeCount > 0) {
+    doc.text(
+      pdfText(`* ${headChangeCount} unit memiliki lebih dari satu kepala; lihat detail unit.`),
+      14,
+      36
+    );
+  }
+
   autoTable(doc, {
-    startY: 37,
+    startY: headChangeCount > 0 ? 41 : 37,
     head: [['No', 'Perangkat Daerah', 'Kepala', 'Hadir', 'Disposisi', 'Nilai R&P', 'Perjalanan']],
     body: units.map((unit, index) => [
       String(index + 1),
-      pdfText(unit.short),
+      pdfText(unit.short) + (unit.headChanged ? ' *' : ''),
       pdfText(unit.head),
       `${pct(unit.attendance.pct)} (${num(unit.attendance.present)}/${num(unit.attendance.total)})`,
       unit.disposition.total
@@ -116,6 +125,7 @@ export async function downloadUnitsXlsx(
     'Perangkat Daerah': unit.short,
     Nama: unit.name,
     Kepala: unit.head,
+    'Catatan kepala': unit.headChanged ? 'Pergantian, perlu verifikasi' : '',
     Kelompok: unit.group,
     'Kehadiran (%)': unit.attendance.pct,
     'Hadir (catatan)': unit.attendance.present,
@@ -152,6 +162,7 @@ export async function downloadUnitsXlsx(
     { wch: 34 },
     { wch: 52 },
     { wch: 38 },
+    { wch: 26 },
     { wch: 18 },
     { wch: 13 },
     { wch: 16 },
@@ -217,6 +228,23 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
   );
 
   let cursor = 56;
+  if (unit.leadership?.length) {
+    const history = unit.leadership
+      .map(
+        (period) =>
+          `${period.name} (${period.role}, ${dateISO(period.from)}-${dateISO(period.to)})${
+            period.verified ? '' : ' [perlu verifikasi]'
+          }`
+      )
+      .join('; ');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(43, 63, 87);
+    const lines = doc.splitTextToSize(pdfText(`Riwayat kepala: ${history}`), 260) as string[];
+    doc.text(lines, 14, 55);
+    cursor = 55 + lines.length * 3.6 + 4;
+  }
+
   const pageFooter = () => {
     const page = doc.getNumberOfPages();
     doc.setFontSize(7.5);
@@ -268,9 +296,10 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
   doc.text(`Perjalanan Dinas (${unit.records.travel.length})`, 14, cursor);
   autoTable(doc, {
     startY: cursor + 3,
-    head: [['No', 'Mulai', 'Selesai', 'Hari', 'Jenis', 'Tujuan', 'Kegiatan']],
+    head: [['No', 'Nama', 'Mulai', 'Selesai', 'Hari', 'Jenis', 'Tujuan', 'Kegiatan']],
     body: unit.records.travel.map((item, index) => [
       String(index + 1),
+      pdfText(item.name),
       pdfText(dateISO(item.d)),
       pdfText(dateISO(item.end)),
       String(item.days),
@@ -282,13 +311,14 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
     headStyles: { fillColor: [0, 77, 153], textColor: 255, fontStyle: 'bold', fontSize: 8 },
     alternateRowStyles: { fillColor: [248, 246, 240] },
     columnStyles: {
-      0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 24 },
-      2: { cellWidth: 24 },
-      3: { cellWidth: 11, halign: 'center' },
-      4: { cellWidth: 24 },
-      5: { cellWidth: 44 },
-      6: { cellWidth: 113 }
+      0: { cellWidth: 8, halign: 'center' },
+      1: { cellWidth: 34 },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 9, halign: 'center' },
+      5: { cellWidth: 18 },
+      6: { cellWidth: 34 },
+      7: { cellWidth: 80 }
     },
     didDrawPage: pageFooter
   });
@@ -332,11 +362,19 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
 export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta): Promise<void> {
   const XLSX = await import('xlsx');
 
+  const leadershipInfo = (unit.leadership ?? []).map((period, index) => ({
+    Keterangan: `Kepala ${index + 1}`,
+    Nilai:
+      `${period.name} (${period.role}, ${dateISO(period.from)}-${dateISO(period.to)})` +
+      (period.verified ? '' : ' - perlu verifikasi')
+  }));
+
   const info = [
     { Keterangan: 'Judul', Nilai: TITLE },
     { Keterangan: 'Perangkat Daerah', Nilai: unit.short },
     { Keterangan: 'Nama', Nilai: unit.name },
     { Keterangan: 'Kepala', Nilai: unit.head },
+    ...leadershipInfo,
     { Keterangan: 'Kelompok', Nilai: unit.group },
     { Keterangan: 'Periode', Nilai: meta.periodLabel },
     { Keterangan: 'Sumber', Nilai: SOURCE },
@@ -370,6 +408,7 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
 
   const travel = unit.records.travel.map((item, index) => ({
     No: index + 1,
+    Nama: item.name,
     Mulai: dateISO(item.d),
     Selesai: dateISO(item.end),
     Hari: item.days,
@@ -406,6 +445,7 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
   const travelSheet = XLSX.utils.json_to_sheet(travel);
   travelSheet['!cols'] = [
     { wch: 5 },
+    { wch: 34 },
     { wch: 14 },
     { wch: 14 },
     { wch: 7 },

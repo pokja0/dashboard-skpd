@@ -9,8 +9,13 @@
   const form = $derived(page.form as ActionData);
   const audit = dataset.audit;
   const duplicateCount = audit.duplicates.dispositions.length + audit.duplicates.travel.length;
+  const headChanges = audit.headChanges;
   const issueCount =
-    duplicateCount + audit.dateFixes.length + audit.missingNames.length + audit.excludedDispositions.count;
+    duplicateCount +
+    audit.dateFixes.length +
+    audit.missingNames.length +
+    audit.excludedDispositions.count +
+    headChanges.length;
   function joinRows(rows: number[]): string {
     if (rows.length <= 1) return rows.join('');
     return `${rows.slice(0, -1).join(', ')}, dan ${rows[rows.length - 1]}`;
@@ -39,6 +44,7 @@
     <span class="chip primary"><Icon name="shield" size={13} /> Superadmin</span>
     <span class="chip"><Icon name="users" size={13} /> {data.accounts.length} akun</span>
     <span class="chip"><Icon name="alert" size={13} /> {num(issueCount)} catatan perbaikan</span>
+    <span class="chip"><Icon name="users" size={13} /> {num(headChanges.length)} kandidat pergantian kepala</span>
   </div>
 </div>
 
@@ -93,6 +99,13 @@
           <span>
             {num(audit.excludedDispositions.count)} baris non-SKPD tidak dihitung ke total unit. Periksa
             kembali unit tujuan atau keluarkan dari rekap.
+          </span>
+        </li>
+        <li>
+          <strong>Verifikasi pergantian kepala</strong>
+          <span>
+            {num(headChanges.length)} unit memiliki lebih dari satu nama kepala pada data perjalanan.
+            Periksa tanggal jabatan serta status Plt./definitif.
           </span>
         </li>
         <li>
@@ -298,4 +311,38 @@
       </div>
     </article>
   </div>
+
+  <article class="panel" style="margin-top:0.9rem">
+    <div class="panel-head">
+      <div>
+        <h3>Kandidat pergantian kepala</h3>
+        <p>Nama berbeda pada data perjalanan per unit.</p>
+      </div>
+      <span class="chip danger">Perlu verifikasi</span>
+    </div>
+    <div class="panel-body">
+      <div class="audit-list">
+        {#each headChanges as change}
+          <div class="audit-item">
+            <span
+              class:primary={change.kind === 'variant'}
+              class:danger={change.kind === 'change'}
+              class="chip"
+            >
+              {change.kind === 'change' ? 'Pergantian' : 'Varian nama'}
+            </span>
+            <strong>{change.unitShort}</strong>
+            {#each change.names as candidate}
+              <p>
+                {candidate.name} · {num(candidate.count)} baris ·
+                {dateISO(candidate.first)}–{dateISO(candidate.last)}
+              </p>
+              <small>Baris: {candidate.rows.join(', ')}</small>
+            {/each}
+            <small>{change.note}</small>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </article>
 </section>

@@ -2237,6 +2237,42 @@ ol {
   white-space: nowrap;
 }
 
+.unit-cell-text strong.unit-name {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.unit-cell-text strong.unit-name > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.head-change-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.08rem 0.36rem;
+  border-radius: 999px;
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.unit-cell-text .head-change-badge {
+  display: inline-flex;
+  overflow: visible;
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.55rem;
+}
+
 .metric-cell {
   min-width: 110px;
 }
@@ -2564,6 +2600,48 @@ tr:hover .row-link,
 .detail-aside {
   display: grid;
   gap: 0.9rem;
+}
+
+.leadership-list {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+
+.leadership-item {
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.leadership-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.leadership-top strong {
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.leadership-item p {
+  margin-top: 0.25rem;
+  color: var(--ink-2);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.leadership-item small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.45;
 }
 
 .profile-list {

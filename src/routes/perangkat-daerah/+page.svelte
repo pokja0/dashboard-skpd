@@ -238,7 +238,12 @@
               <a class="unit-cell" href={`/perangkat-daerah/${unit.id}`}>
                 <span class="unit-avatar">{unitMonogram(unit.short)}</span>
                 <span class="unit-cell-text">
-                  <strong>{unit.short}</strong>
+                  <strong class="unit-name">
+                    <span>{unit.short}</span>
+                    {#if unit.headChanged}
+                      <span class="head-change-badge">Pergantian</span>
+                    {/if}
+                  </strong>
                   <span>{truncate(unit.head, 48)}</span>
                 </span>
               </a>
@@ -318,7 +323,10 @@
       <a class="unit-card" href={`/perangkat-daerah/${unit.id}`}>
         <div class="unit-card-top">
           <div>
-            <h3>{unit.short}</h3>
+            <h3>
+              {unit.short}
+              {#if unit.headChanged}<span class="head-change-badge">Pergantian</span>{/if}
+            </h3>
             <p class="head">{truncate(unit.head, 46)}</p>
           </div>
           <div class="unit-card-badges">

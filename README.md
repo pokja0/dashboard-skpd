@@ -8,8 +8,8 @@ Sulawesi Barat. Sumber data: **Rekap Tim Staf Sekda**.
 - **Ringkasan** — tiga indikator utama, tren bulanan, prioritas tindak lanjut, tujuan
   perjalanan dinas, dan peringkat Perangkat Daerah.
 - **Daftar Perangkat Daerah** - pencarian, filter kelompok, filter periode bulanan
-  (default bulan lengkap terakhir), nomor urut, pengurutan per kategori, serta unduhan PDF
-  dan XLSX.
+  (default bulan terkini, pilihan mundur sampai Januari, atau rentang khusus), nomor urut,
+  pengurutan per kategori, serta unduhan PDF dan XLSX.
 - **Detail unit** — komposisi kehadiran, tren bulanan, grafik tujuan perjalanan,
   daftar lengkap disposisi, perjalanan, dan kehadiran, serta unduhan PDF dan XLSX.
 - **Metodologi** — definisi indikator, periode, dan catatan data.
@@ -66,6 +66,10 @@ rumus `((persentase kehadiran + persentase disposisi) / 2) x 30%`. Jika tidak ad
 kehadiran atau disposisi pada periode yang dipilih, komponen tersebut dianggap 100% agar nilai
 tetap dapat dihitung. Nilai ini masih di level unit; penilaian individual memerlukan data masa
 jabatan kepala yang terverifikasi.
+
+Data perjalanan kini menyertakan nama pelaku perjalanan. Detail unit menampilkan riwayat atau
+kandidat kepala beserta status verifikasi, sedangkan halaman superadmin memuat daftar kandidat
+pergantian kepala dan varian ejaan nama untuk ditinjau.
 
 Untuk membangun ulang data olahan (butuh Python 3):
 
