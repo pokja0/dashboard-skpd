@@ -89,7 +89,7 @@ export async function downloadUnitsPdf(
     head: [['No', 'Perangkat Daerah', 'Kepala', 'Kehadiran', 'Disposisi', 'Nilai R&P', 'Perjalanan']],
     body: units.map((unit, index) => [
       String(index + 1),
-      pdfText(unit.short) + (unit.headChanged ? ' *' : ''),
+      pdfText(unit.name) + (unit.headChanged ? ' *' : ''),
       pdfText(unit.head),
       `${pct(unit.attendance.pct)} (${num(unit.attendance.present)}/${num(unit.attendance.total)})`,
       unit.disposition.total
@@ -103,12 +103,12 @@ export async function downloadUnitsPdf(
     alternateRowStyles: { fillColor: [248, 246, 240] },
     columnStyles: {
       0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 48 },
-      2: { cellWidth: 50 },
-      3: { cellWidth: 36 },
-      4: { cellWidth: 34 },
+      1: { cellWidth: 75 },
+      2: { cellWidth: 45 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 30 },
       5: { cellWidth: 22, halign: 'right' },
-      6: { cellWidth: 40 }
+      6: { cellWidth: 38 }
     },
     didDrawPage: pageFooter
   });
@@ -136,7 +136,7 @@ export async function downloadUnitsPdf(
     head: [['No', 'Perangkat Daerah', 'Hadir Langsung', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total']],
     body: units.map((unit, index) => [
       String(index + 1),
-      pdfText(unit.short),
+      pdfText(unit.name),
       String(unit.attendance.statuses.Hadir),
       String(unit.attendance.statuses.Diwakili),
       String(unit.attendance.statuses['Dinas Luar']),
@@ -150,7 +150,7 @@ export async function downloadUnitsPdf(
     alternateRowStyles: { fillColor: [248, 246, 240] },
     columnStyles: {
       0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 55 },
+      1: { cellWidth: 75 },
       2: { cellWidth: 30, halign: 'right' },
       3: { cellWidth: 25, halign: 'right' },
       4: { cellWidth: 25, halign: 'right' },
@@ -173,8 +173,7 @@ export async function downloadUnitsXlsx(
 
   const rows = units.map((unit, index) => ({
     No: index + 1,
-    'Perangkat Daerah': unit.short,
-    Nama: unit.name,
+    'Perangkat Daerah': unit.name,
     Kepala: unit.head,
     'Catatan kepala': unit.headChanged ? 'Pergantian, perlu verifikasi' : '',
     Kelompok: unit.group,
@@ -197,18 +196,6 @@ export async function downloadUnitsXlsx(
     'Luar daerah': unit.travel.outside
   }));
 
-  const statusRows = units.map((unit, index) => ({
-    No: index + 1,
-    'Perangkat Daerah': unit.short,
-    'Hadir Langsung': unit.attendance.statuses.Hadir,
-    Diwakili: unit.attendance.statuses.Diwakili,
-    'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
-    Sakit: unit.attendance.statuses.Sakit,
-    Izin: unit.attendance.statuses.Izin,
-    'Tanpa Keterangan': unit.attendance.statuses['Tanpa Keterangan'],
-    Total: unit.attendance.total
-  }));
-
   const info = [
     { Keterangan: 'Judul', Nilai: TITLE },
     { Keterangan: 'Periode', Nilai: meta.periodLabel },
@@ -224,13 +211,11 @@ export async function downloadUnitsXlsx(
 
   const workbook = XLSX.utils.book_new();
   const dataSheet = XLSX.utils.json_to_sheet(rows);
-  const statusSheet = XLSX.utils.json_to_sheet(statusRows);
   const infoSheet = XLSX.utils.json_to_sheet(info);
 
   dataSheet['!cols'] = [
     { wch: 5 },
-    { wch: 34 },
-    { wch: 52 },
+    { wch: 60 },
     { wch: 38 },
     { wch: 26 },
     { wch: 18 },
@@ -253,20 +238,8 @@ export async function downloadUnitsXlsx(
     { wch: 12 }
   ];
   infoSheet['!cols'] = [{ wch: 22 }, { wch: 60 }];
-  statusSheet['!cols'] = [
-    { wch: 5 },
-    { wch: 34 },
-    { wch: 16 },
-    { wch: 9 },
-    { wch: 11 },
-    { wch: 8 },
-    { wch: 8 },
-    { wch: 16 },
-    { wch: 8 }
-  ];
 
   XLSX.utils.book_append_sheet(workbook, dataSheet, 'Perangkat Daerah');
-  XLSX.utils.book_append_sheet(workbook, statusSheet, 'Rekap Kehadiran');
   XLSX.utils.book_append_sheet(workbook, infoSheet, 'Info');
   XLSX.writeFile(workbook, `${fileStamp(meta)}.xlsx`);
 }
@@ -287,13 +260,12 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(11, 32, 56);
-  doc.text(pdfText(unit.short), 14, 23);
+  doc.text(pdfText(unit.name), 14, 23);
 
   doc.setFontSize(9);
   doc.setTextColor(43, 63, 87);
-  doc.text(pdfText(unit.name), 14, 29);
-  doc.text(pdfText(`Kepala: ${unit.head}`), 14, 34);
-  doc.text(pdfText(`Kelompok: ${unit.group} | Periode: ${meta.periodLabel}`), 14, 39);
+  doc.text(pdfText(`Kepala: ${unit.head}`), 14, 29);
+  doc.text(pdfText(`Kelompok: ${unit.group} | Periode: ${meta.periodLabel}`), 14, 34);
 
   doc.setFontSize(8.5);
   doc.setTextColor(95, 109, 128);
@@ -304,7 +276,7 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
         `Perjalanan ${num(unit.travel.total)} trip / ${num(unit.travel.days)} hari`
     ),
     14,
-    45
+    40
   );
   doc.text(
     pdfText(
@@ -312,7 +284,7 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
         'Rumus: ((kehadiran + disposisi) / 2) x 30%; komponen tanpa catatan = 100%'
     ),
     14,
-    50
+    45
   );
 
   doc.setFont('helvetica', 'normal');
@@ -324,8 +296,8 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
       .map((status) => `${statusLabels[status]} ${num(unit.attendance.statuses[status])}`)
       .join(' | ');
   const statusLines = doc.splitTextToSize(pdfText(statusText), 260) as string[];
-  doc.text(statusLines, 14, 55);
-  let cursor = 55 + statusLines.length * 3.6 + 4;
+  doc.text(statusLines, 14, 50);
+  let cursor = 50 + statusLines.length * 3.6 + 4;
 
   if (unit.leadership?.length) {
     const history = unit.leadership
@@ -470,8 +442,7 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
 
   const info = [
     { Keterangan: 'Judul', Nilai: TITLE },
-    { Keterangan: 'Perangkat Daerah', Nilai: unit.short },
-    { Keterangan: 'Nama', Nilai: unit.name },
+    { Keterangan: 'Perangkat Daerah', Nilai: unit.name },
     { Keterangan: 'Kepala', Nilai: unit.head },
     ...leadershipInfo,
     { Keterangan: 'Kelompok', Nilai: unit.group },
@@ -531,30 +502,11 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     Status: item.status
   }));
 
-  const statusSummary = [
-    ...statusOrder.map((status) => ({
-      Status: statusLabels[status],
-      Jumlah: unit.attendance.statuses[status],
-      Persentase: unit.attendance.total
-        ? pct((unit.attendance.statuses[status] / unit.attendance.total) * 100)
-        : '0%'
-    })),
-    {
-      Status: 'Total',
-      Jumlah: unit.attendance.total,
-      Persentase: unit.attendance.total ? '100%' : '0%'
-    }
-  ];
-
   const workbook = XLSX.utils.book_new();
 
   const infoSheet = XLSX.utils.json_to_sheet(info);
-  infoSheet['!cols'] = [{ wch: 24 }, { wch: 60 }];
+  infoSheet['!cols'] = [{ wch: 24 }, { wch: 80 }];
   XLSX.utils.book_append_sheet(workbook, infoSheet, 'Ringkasan');
-
-  const statusSheet = XLSX.utils.json_to_sheet(statusSummary);
-  statusSheet['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(workbook, statusSheet, 'Rekap Kehadiran');
 
   const dispSheet = XLSX.utils.json_to_sheet(dispositions);
   dispSheet['!cols'] = [

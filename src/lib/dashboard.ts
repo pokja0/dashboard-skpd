@@ -457,6 +457,7 @@ export function buildDashboard(from: string, to: string): Dashboard {
     insights: {
       pendingTop: pendingTop.map((unit) => ({
         id: unit.id,
+        name: unit.name,
         short: unit.short,
         pending: unit.disposition.pending,
         total: unit.disposition.total,
@@ -464,6 +465,7 @@ export function buildDashboard(from: string, to: string): Dashboard {
       })),
       lowAttendance: lowAttendance.map((unit) => ({
         id: unit.id,
+        name: unit.name,
         short: unit.short,
         pct: unit.attendance.pct,
         present: unit.attendance.present,
@@ -471,6 +473,7 @@ export function buildDashboard(from: string, to: string): Dashboard {
       })),
       topAttendance: topAttendance.map((unit) => ({
         id: unit.id,
+        name: unit.name,
         short: unit.short,
         present: unit.attendance.present,
         total: unit.attendance.total,

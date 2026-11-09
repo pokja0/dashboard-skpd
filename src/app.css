@@ -1262,12 +1262,13 @@ ol {
 }
 
 .rank-name {
-  overflow: hidden;
+  overflow: visible;
   color: var(--ink);
   font-size: 0.78rem;
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .rank-sub {
@@ -1877,12 +1878,13 @@ ol {
 
 .ranking-unit strong {
   display: block;
-  overflow: hidden;
+  overflow: visible;
   color: var(--ink);
   font-size: 0.81rem;
   font-weight: 750;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .ranking-unit span {
@@ -2240,13 +2242,18 @@ ol {
 
 .unit-cell-text strong.unit-name {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
+  overflow: visible;
+  white-space: normal;
 }
 
 .unit-cell-text strong.unit-name > span:first-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.35;
 }
 
 .head-change-badge {

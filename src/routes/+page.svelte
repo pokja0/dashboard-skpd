@@ -262,9 +262,9 @@
       <span class="insight-icon"><Icon name="alert" size={19} /></span>
       <h3>Disposisi belum selesai: {num(summary.disposition.pending)}</h3>
       <p>
-        Seluruhnya sudah melewati tenggat. {insights.pendingTop[0]?.short ?? '—'}
+        Seluruhnya sudah melewati tenggat. {insights.pendingTop[0]?.name ?? '—'}
         ({num(insights.pendingTop[0]?.pending ?? 0)}) dan
-        {insights.pendingTop[1]?.short ?? '—'} ({num(insights.pendingTop[1]?.pending ?? 0)})
+        {insights.pendingTop[1]?.name ?? '—'} ({num(insights.pendingTop[1]?.pending ?? 0)})
         menyumbang porsi terbesar.
       </p>
       <a class="insight-link" href="/perangkat-daerah">
@@ -277,7 +277,7 @@
       <h3>Catatan tanpa keterangan: {num(summary.attendance.statuses['Tanpa Keterangan'])}</h3>
       <p>
         Setara {pct((summary.attendance.statuses['Tanpa Keterangan'] / summary.attendance.total) * 100)} dari
-        seluruh catatan. Kehadiran terendah: {insights.lowAttendance[0]?.short ?? '—'}
+        seluruh catatan. Kehadiran terendah: {insights.lowAttendance[0]?.name ?? '—'}
         ({pct(insights.lowAttendance[0]?.pct ?? 0)}).
       </p>
       <a class="insight-link" href="/perangkat-daerah">
@@ -462,7 +462,7 @@
             <li class="rank-row">
               <span class:top={index === 0} class="rank-index">{index + 1}</span>
               <div class="rank-main">
-                <div class="rank-name">{item.short}</div>
+                <div class="rank-name">{item.name}</div>
                 <div class="rank-sub">{num(item.total)} surat · {pct(item.pct)} selesai</div>
                 <div class="rank-bar"><span style={`width:${(item.pending / maxPending) * 100}%`}></span></div>
               </div>
@@ -504,7 +504,7 @@
           <Icon name="info" size={16} />
           <span>
             {num(summary.attendance.statuses['Tanpa Keterangan'])} catatan tanpa keterangan perlu
-            klarifikasi unit. Kehadiran terendah: {insights.lowAttendance[0]?.short ?? '—'}
+            klarifikasi unit. Kehadiran terendah: {insights.lowAttendance[0]?.name ?? '—'}
             ({pct(insights.lowAttendance[0]?.pct ?? 0)}).
           </span>
         </div>
@@ -561,7 +561,7 @@
         <a class="ranking-row" href={`/perangkat-daerah/${unit.id}`}>
           <span class:top={index === 0} class="rank-index">{index + 1}</span>
           <div class="ranking-unit">
-            <strong>{unit.short}</strong>
+            <strong>{unit.name}</strong>
             <span>{truncate(unit.head, 44)}</span>
           </div>
           <div class="ranking-metric">

@@ -189,10 +189,10 @@
 </script>
 
 <svelte:head>
-  <title>{unit.short} — Kinerja Kepala Perangkat Daerah 2026</title>
+  <title>{unit.name} — Kinerja Kepala Perangkat Daerah 2026</title>
   <meta
     name="description"
-    content={`Profil ${unit.short}: kehadiran rapat, penyelesaian disposisi, dan perjalanan dinas ${unit.head} periode ${periodLabel}.`}
+    content={`Profil ${unit.name}: kehadiran rapat, penyelesaian disposisi, dan perjalanan dinas ${unit.head} periode ${periodLabel}.`}
   />
 </svelte:head>
 
@@ -202,7 +202,7 @@
     <span aria-hidden="true">/</span>
     <a href="/perangkat-daerah">Perangkat Daerah</a>
     <span aria-hidden="true">/</span>
-    <span aria-current="page">{unit.short}</span>
+    <span aria-current="page">{unit.name}</span>
   </nav>
 
   <section class="detail-hero">
@@ -216,8 +216,7 @@
             <span class="chip danger"><Icon name="alert" size={13} /> Pergantian kepala</span>
           {/if}
         </div>
-        <h1>{unit.short}</h1>
-        <p class="full-name">{unit.name}</p>
+        <h1>{unit.name}</h1>
         <div class="detail-head">
           <Icon name="users" size={15} />
           <span>Kepala:</span>
@@ -322,7 +321,7 @@
     </article>
   </section>
 
-  <h2 class="sr-only">Rincian {unit.short}</h2>
+  <h2 class="sr-only">Rincian {unit.name}</h2>
 
   <div class="detail-grid">
     <div class="detail-stack">
@@ -640,7 +639,7 @@
         <div class="panel-body">
           <div class="unit-nav">
             {#each peers as peer}
-              <a href={`/perangkat-daerah/${peer.id}`}>{peer.short}</a>
+              <a href={`/perangkat-daerah/${peer.id}`}>{peer.name}</a>
             {/each}
           </div>
         </div>

@@ -58,6 +58,7 @@ export interface HeadCandidateName {
 export interface HeadChangeCandidate {
   unitId: string;
   unitShort: string;
+  unitName: string;
   names: HeadCandidateName[];
   rows: number[];
   kind: 'change' | 'variant';
@@ -272,6 +273,7 @@ export interface Dataset {
   insights: {
     pendingTop: Array<{
       id: string;
+      name: string;
       short: string;
       pending: number;
       total: number;
@@ -279,6 +281,7 @@ export interface Dataset {
     }>;
     lowAttendance: Array<{
       id: string;
+      name: string;
       short: string;
       pct: number;
       present: number;
@@ -286,6 +289,7 @@ export interface Dataset {
     }>;
     topAttendance: Array<{
       id: string;
+      name: string;
       short: string;
       present: number;
       total: number;

@@ -29,7 +29,7 @@
 
   const navItems = [
     { href: '/', label: 'Ringkasan', icon: 'chart' },
-    { href: '/perangkat-daerah', label: 'Perangkat Daerah', short: 'Perangkat', icon: 'building' },
+    { href: '/perangkat-daerah', label: 'Perangkat Daerah', short: 'Perangkat Daerah', icon: 'building' },
     { href: '/metodologi', label: 'Metodologi', icon: 'file' }
   ];
 

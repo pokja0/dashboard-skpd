@@ -343,7 +343,7 @@
             >
               {change.kind === 'change' ? 'Pergantian' : 'Varian nama'}
             </span>
-            <strong>{change.unitShort}</strong>
+            <strong>{change.unitName}</strong>
             {#each change.names as candidate}
               <p>
                 {candidate.name} · {num(candidate.count)} baris ·

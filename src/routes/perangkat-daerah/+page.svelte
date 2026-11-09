@@ -239,7 +239,7 @@
                 <span class="unit-avatar">{unitMonogram(unit.short)}</span>
                 <span class="unit-cell-text">
                   <strong class="unit-name">
-                    <span>{unit.short}</span>
+                    <span>{unit.name}</span>
                     {#if unit.headChanged}
                       <span class="head-change-badge">Pergantian</span>
                     {/if}
@@ -293,7 +293,7 @@
               </div>
             </td>
             <td class="num">
-              <a class="row-link" href={`/perangkat-daerah/${unit.id}`} aria-label={`Buka detail ${unit.short}`}>
+              <a class="row-link" href={`/perangkat-daerah/${unit.id}`} aria-label={`Buka detail ${unit.name}`}>
                 <Icon name="arrow-right" size={15} />
               </a>
             </td>
@@ -324,7 +324,7 @@
         <div class="unit-card-top">
           <div>
             <h3>
-              {unit.short}
+              {unit.name}
               {#if unit.headChanged}<span class="head-change-badge">Pergantian</span>{/if}
             </h3>
             <p class="head">{truncate(unit.head, 46)}</p>

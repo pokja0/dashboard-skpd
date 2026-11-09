@@ -539,6 +539,7 @@ for uid, groups in name_groups.items():
     head_changes.append({
         'unitId': uid,
         'unitShort': UNIT_BY_ID[uid][1],
+        'unitName': UNIT_BY_ID[uid][2],
         'names': names,
         'rows': sorted({row for n in names for row in n['rows']}),
         'kind': kind,
