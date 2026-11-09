@@ -110,6 +110,23 @@ export async function downloadUnitsPdf(
       5: { cellWidth: 22, halign: 'right' },
       6: { cellWidth: 38 }
     },
+    didParseCell: (data) => {
+      if (data.section !== 'head') return;
+      const colors: Array<[number, number, number]> = [
+        [0, 77, 153],
+        [0, 77, 153],
+        [0, 77, 153],
+        [31, 122, 82],
+        [192, 138, 46],
+        [122, 78, 171],
+        [91, 143, 201]
+      ];
+      const color = colors[data.column.index];
+      if (color) {
+        data.cell.styles.fillColor = color;
+        data.cell.styles.textColor = 255;
+      }
+    },
     didDrawPage: pageFooter
   });
 
@@ -133,7 +150,7 @@ export async function downloadUnitsPdf(
 
   autoTable(doc, {
     startY: nextY + 7,
-    head: [['No', 'Perangkat Daerah', 'Hadir Langsung', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total']],
+    head: [['No', 'Perangkat Daerah', 'Hadir Langsung', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total Kegiatan']],
     body: units.map((unit, index) => [
       String(index + 1),
       pdfText(unit.name),
@@ -150,14 +167,22 @@ export async function downloadUnitsPdf(
     alternateRowStyles: { fillColor: [248, 246, 240] },
     columnStyles: {
       0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 75 },
+      1: { cellWidth: 69 },
       2: { cellWidth: 30, halign: 'right' },
       3: { cellWidth: 25, halign: 'right' },
       4: { cellWidth: 25, halign: 'right' },
       5: { cellWidth: 25, halign: 'right' },
       6: { cellWidth: 25, halign: 'right' },
       7: { cellWidth: 25, halign: 'right' },
-      8: { cellWidth: 22, halign: 'right' }
+      8: { cellWidth: 28, halign: 'right' }
+    },
+    didParseCell: (data) => {
+      if (data.section !== 'head') return;
+      data.cell.styles.fillColor =
+        data.column.index <= 1
+          ? ([0, 77, 153] as [number, number, number])
+          : ([31, 122, 82] as [number, number, number]);
+      data.cell.styles.textColor = 255;
     },
     didDrawPage: pageFooter
   });
@@ -169,32 +194,72 @@ export async function downloadUnitsXlsx(
   units: DashboardUnit[],
   meta: DashboardMeta
 ): Promise<void> {
-  const XLSX = await import('xlsx');
+  const XLSX = await import('xlsx-js-style');
 
-  const rows = units.map((unit, index) => ({
-    No: index + 1,
-    'Perangkat Daerah': unit.name,
-    Kepala: unit.head,
-    'Catatan kepala': unit.headChanged ? 'Pergantian, perlu verifikasi' : '',
-    Kelompok: unit.group,
-    'Kehadiran (%)': unit.attendance.pct,
-    'Kehadiran (catatan)': unit.attendance.present,
-    'Hadir Langsung': unit.attendance.statuses.Hadir,
-    'Diwakili': unit.attendance.statuses.Diwakili,
-    'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
-    'Sakit': unit.attendance.statuses.Sakit,
-    'Izin': unit.attendance.statuses.Izin,
-    'Tanpa Keterangan': unit.attendance.statuses['Tanpa Keterangan'],
-    'Total catatan kehadiran': unit.attendance.total,
-    'Disposisi (%)': unit.disposition.pct ?? '',
-    'Selesai': unit.disposition.done,
-    'Total disposisi': unit.disposition.total,
-    'Belum selesai': unit.disposition.pending,
-    'Nilai R&P (/30)': unit.reward,
-    'Perjalanan (trip)': unit.travel.total,
-    'Hari perjalanan': unit.travel.days,
-    'Luar daerah': unit.travel.outside
-  }));
+  const groups = [
+    { label: 'Identitas', span: 5, color: '004D99', soft: 'F2F6FC' },
+    { label: 'Kehadiran', span: 9, color: '1F7A52', soft: 'EAF7F0' },
+    { label: 'Disposisi', span: 4, color: 'C08A2E', soft: 'FDF6E7' },
+    { label: 'Nilai R&P', span: 1, color: '7A4EAB', soft: 'F3EDFA' },
+    { label: 'Perjalanan', span: 3, color: '5B8FC9', soft: 'EDF4FC' }
+  ];
+
+  const headers = [
+    'No',
+    'Perangkat Daerah',
+    'Kepala',
+    'Catatan kepala',
+    'Kelompok',
+    'Kehadiran (%)',
+    'Kehadiran',
+    'Hadir Langsung',
+    'Diwakili',
+    'Dinas Luar',
+    'Sakit',
+    'Izin',
+    'Tanpa Keterangan',
+    'Total Kegiatan',
+    'Disposisi (%)',
+    'Selesai',
+    'Total disposisi',
+    'Belum selesai',
+    'Nilai R&P (/30)',
+    'Perjalanan (trip)',
+    'Hari perjalanan',
+    'Luar daerah'
+  ];
+
+  const groupRow = groups.flatMap((group) => [
+    group.label,
+    ...Array(group.span - 1).fill('')
+  ]);
+  const headerColors = groups.flatMap((group) => Array(group.span).fill(group.color));
+  const softColors = groups.flatMap((group) => Array(group.span).fill(group.soft));
+
+  const dataRows = units.map((unit, index) => [
+    index + 1,
+    unit.name,
+    unit.head,
+    unit.headChanged ? 'Pergantian, perlu verifikasi' : '',
+    unit.group,
+    unit.attendance.pct,
+    unit.attendance.present,
+    unit.attendance.statuses.Hadir,
+    unit.attendance.statuses.Diwakili,
+    unit.attendance.statuses['Dinas Luar'],
+    unit.attendance.statuses.Sakit,
+    unit.attendance.statuses.Izin,
+    unit.attendance.statuses['Tanpa Keterangan'],
+    unit.attendance.total,
+    unit.disposition.pct ?? '',
+    unit.disposition.done,
+    unit.disposition.total,
+    unit.disposition.pending,
+    unit.reward,
+    unit.travel.total,
+    unit.travel.days,
+    unit.travel.outside
+  ]);
 
   const info = [
     { Keterangan: 'Judul', Nilai: TITLE },
@@ -210,7 +275,7 @@ export async function downloadUnitsXlsx(
   ];
 
   const workbook = XLSX.utils.book_new();
-  const dataSheet = XLSX.utils.json_to_sheet(rows);
+  const dataSheet = XLSX.utils.aoa_to_sheet([groupRow, headers, ...dataRows]);
   const infoSheet = XLSX.utils.json_to_sheet(info);
 
   dataSheet['!cols'] = [
@@ -220,14 +285,14 @@ export async function downloadUnitsXlsx(
     { wch: 26 },
     { wch: 18 },
     { wch: 13 },
-    { wch: 16 },
+    { wch: 14 },
     { wch: 16 },
     { wch: 9 },
     { wch: 11 },
     { wch: 8 },
     { wch: 8 },
     { wch: 16 },
-    { wch: 20 },
+    { wch: 18 },
     { wch: 13 },
     { wch: 10 },
     { wch: 14 },
@@ -237,7 +302,83 @@ export async function downloadUnitsXlsx(
     { wch: 15 },
     { wch: 12 }
   ];
-  infoSheet['!cols'] = [{ wch: 22 }, { wch: 60 }];
+  dataSheet['!rows'] = [
+    { hpt: 24 },
+    { hpt: 36 },
+    ...dataRows.map(() => ({ hpt: 30 }))
+  ];
+  dataSheet['!autofilter'] = {
+    ref: `A2:V${dataRows.length + 2}`
+  };
+  infoSheet['!cols'] = [{ wch: 22 }, { wch: 80 }];
+
+  let start = 0;
+  dataSheet['!merges'] = groups.map((group) => {
+    const range = {
+      s: { r: 0, c: start },
+      e: { r: 0, c: start + group.span - 1 }
+    };
+    start += group.span;
+    return range;
+  });
+
+  const thin = { style: 'thin', color: { rgb: 'D9E2EC' } };
+  const border = { top: thin, bottom: thin, left: thin, right: thin };
+
+  function setStyle(row: number, col: number, style: Record<string, unknown>) {
+    const address = XLSX.utils.encode_cell({ r: row, c: col });
+    if (!dataSheet[address]) dataSheet[address] = { t: 's', v: '' };
+    dataSheet[address].s = style;
+  }
+
+  let groupStart = 0;
+  groups.forEach((group) => {
+    for (let col = groupStart; col < groupStart + group.span; col++) {
+      setStyle(0, col, {
+        fill: { patternType: 'solid', fgColor: { rgb: group.color } },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border
+      });
+    }
+    groupStart += group.span;
+  });
+
+  headers.forEach((_, col) => {
+    setStyle(1, col, {
+      fill: { patternType: 'solid', fgColor: { rgb: headerColors[col] } },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9 },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border
+    });
+  });
+
+  for (let row = 2; row < dataRows.length + 2; row++) {
+    for (let col = 0; col < headers.length; col++) {
+      setStyle(row, col, {
+        fill: { patternType: 'solid', fgColor: { rgb: softColors[col] } },
+        font: { color: { rgb: '0B2038' }, sz: 9 },
+        alignment: {
+          horizontal: col === 0 ? 'center' : col >= 5 ? 'right' : 'left',
+          vertical: 'center',
+          wrapText: col >= 1 && col <= 3
+        },
+        border
+      });
+    }
+  }
+
+  for (let col = 0; col < 2; col++) {
+    const address = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (infoSheet[address]) {
+      infoSheet[address].s = {
+        fill: { patternType: 'solid', fgColor: { rgb: '004D99' } },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
+        alignment: { vertical: 'center' },
+        border
+      };
+    }
+  }
 
   XLSX.utils.book_append_sheet(workbook, dataSheet, 'Perangkat Daerah');
   XLSX.utils.book_append_sheet(workbook, infoSheet, 'Info');
@@ -431,7 +572,7 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
 }
 
 export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta): Promise<void> {
-  const XLSX = await import('xlsx');
+  const XLSX = await import('xlsx-js-style');
 
   const leadershipInfo = (unit.leadership ?? []).map((period, index) => ({
     Keterangan: `Kepala ${index + 1}`,
@@ -449,7 +590,8 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     { Keterangan: 'Periode', Nilai: meta.periodLabel },
     { Keterangan: 'Sumber', Nilai: SOURCE },
     { Keterangan: 'Kehadiran (%)', Nilai: unit.attendance.pct },
-    { Keterangan: 'Kehadiran (catatan)', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
+    { Keterangan: 'Kehadiran', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
+    { Keterangan: 'Total Kegiatan', Nilai: unit.attendance.total },
     ...statusOrder.map((status) => ({
       Keterangan: statusLabels[status],
       Nilai: `${unit.attendance.statuses[status]} (${
