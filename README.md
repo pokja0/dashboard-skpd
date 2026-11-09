@@ -60,7 +60,7 @@ hanya dapat membuka menu Perangkat Daerah dan tidak dapat mengakses halaman Admi
 Data mentah: `data/rekap-tim-staf-sekda.csv`  
 Data olahan: `src/lib/data/rekap.json`
 
-Kehadiran dihitung dari status **Hadir, Diwakili, Dinas Luar, dan Sakit**. Rincian seluruh
+Kehadiran dihitung dari status **Hadir Langsung, Diwakili, Dinas Luar, dan Sakit**. Rincian seluruh
 status tetap ditampilkan pada halaman detail unit. Nilai Reward & Punishment dihitung dengan
 rumus `((persentase kehadiran + persentase disposisi) / 2) x 30%`. Jika tidak ada catatan
 kehadiran atau disposisi pada periode yang dipilih, komponen tersebut dianggap 100% agar nilai

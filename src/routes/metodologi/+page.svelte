@@ -64,7 +64,7 @@
       <h3>Kehadiran rapat</h3>
       <p>
         Jumlah catatan kehadiran kepala unit pada rapat. Status yang dihitung sebagai kehadiran
-        adalah Hadir, Diwakili, Dinas Luar, dan Sakit. Persentase = jumlah keempat status ÷ total
+        adalah Hadir Langsung, Diwakili, Dinas Luar, dan Sakit. Persentase = jumlah keempat status ÷ total
         catatan unit. Rincian Izin dan Tanpa Keterangan tetap ditampilkan.
       </p>
     </article>
@@ -100,7 +100,7 @@
   <ul>
     <li>Perhitungan dilakukan per unit, bukan per individu.</li>
     <li>Kehadiran, disposisi, dan perjalanan dihitung sendiri-sendiri.</li>
-    <li>Kehadiran mencakup status Hadir, Diwakili, Dinas Luar, dan Sakit; komposisi lengkap tetap terlihat pada detail unit.</li>
+    <li>Kehadiran mencakup status Hadir Langsung, Diwakili, Dinas Luar, dan Sakit; komposisi lengkap tetap terlihat pada detail unit.</li>
     <li>Komponen kehadiran atau disposisi yang tidak memiliki catatan dianggap 100% pada Nilai R&amp;P.</li>
     <li>Nilai R&amp;P pada dashboard masih dihitung pada level unit. Penilaian individual memerlukan data masa jabatan kepala yang terverifikasi.</li>
     <li>Beberapa unit memiliki lebih dari satu nama kepala pada data perjalanan. Riwayat atau kandidatnya ditampilkan di detail unit dan halaman superadmin dengan status <strong>perlu verifikasi</strong>.</li>

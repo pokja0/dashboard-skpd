@@ -3,6 +3,7 @@
   import {
     dataset,
     statusColors,
+    statusLabels,
     statusOrder,
     unitInitials,
     type AttendanceRecord,
@@ -32,7 +33,7 @@
 
   const statusSegments = $derived(
     statusOrder.map((status: AttendanceStatus) => ({
-      label: status,
+      label: statusLabels[status],
       value: unit.attendance.statuses[status],
       color: statusColors[status]
     }))
@@ -82,7 +83,7 @@
     }
     return [
       { id: 'all', label: 'Semua', count: fullAttendance.length },
-      { id: 'Hadir', label: 'Hadir', count: fullAttendance.filter((item) => item.status === 'Hadir').length },
+      { id: 'Hadir', label: 'Hadir Langsung', count: fullAttendance.filter((item) => item.status === 'Hadir').length },
       { id: 'Dinas Luar', label: 'Dinas luar', count: fullAttendance.filter((item) => item.status === 'Dinas Luar').length },
       { id: 'Diwakili', label: 'Diwakili', count: fullAttendance.filter((item) => item.status === 'Diwakili').length },
       { id: 'Sakit', label: 'Sakit', count: fullAttendance.filter((item) => item.status === 'Sakit').length },
@@ -339,7 +340,7 @@
               segments={statusSegments}
               total={unit.attendance.total}
               centerValue={pct(unit.attendance.pct)}
-              centerLabel="hadir"
+              centerLabel="kehadiran"
               size={146}
             />
             <ul class="donut-legend">
@@ -498,7 +499,7 @@
                           class:travel={item.status === 'Dinas Luar'}
                           class:gold={item.status === 'Diwakili'}
                           class="chip"
-                        >{item.status}</span>
+                        >{statusLabels[item.status]}</span>
                       </div>
                     </div>
                     <div class="record-line-meta">{dateISO(item.d)}</div>

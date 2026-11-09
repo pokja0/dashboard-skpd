@@ -326,6 +326,20 @@ export const statusOrder: AttendanceStatus[] = [
   'Tanpa Keterangan'
 ];
 
+/** Label tampilan; kunci data tetap memakai "Hadir". */
+export const statusLabels: Record<AttendanceStatus, string> = {
+  Hadir: 'Hadir Langsung',
+  'Dinas Luar': 'Dinas Luar',
+  Diwakili: 'Diwakili',
+  Sakit: 'Sakit',
+  Izin: 'Izin',
+  'Tanpa Keterangan': 'Tanpa Keterangan'
+};
+
+export function statusLabel(status: AttendanceStatus): string {
+  return statusLabels[status];
+}
+
 /** Status yang dihitung sebagai kehadiran pada indikator utama. */
 export const presentStatuses: AttendanceStatus[] = [
   'Hadir',
@@ -334,7 +348,7 @@ export const presentStatuses: AttendanceStatus[] = [
   'Sakit'
 ];
 
-export const presentLabel = 'Hadir, Diwakili, Dinas Luar, dan Sakit';
+export const presentLabel = 'Hadir Langsung, Diwakili, Dinas Luar, dan Sakit';
 
 export function getUnit(slug: string): Unit | undefined {
   return unitById.get(slug);

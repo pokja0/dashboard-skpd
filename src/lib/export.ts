@@ -1,6 +1,6 @@
 import type { DashboardMeta } from './dashboard';
 import type { DashboardUnit } from './data';
-import { dataset, statusOrder } from './data';
+import { dataset, statusLabels, statusOrder } from './data';
 import { dateISO, decimal, num, pct, titleCase } from './format';
 
 const SOURCE = 'Rekap Tim Staf Sekda';
@@ -133,7 +133,7 @@ export async function downloadUnitsPdf(
 
   autoTable(doc, {
     startY: nextY + 7,
-    head: [['No', 'Perangkat Daerah', 'Hadir', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total']],
+    head: [['No', 'Perangkat Daerah', 'Hadir Langsung', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total']],
     body: units.map((unit, index) => [
       String(index + 1),
       pdfText(unit.short),
@@ -150,8 +150,8 @@ export async function downloadUnitsPdf(
     alternateRowStyles: { fillColor: [248, 246, 240] },
     columnStyles: {
       0: { cellWidth: 9, halign: 'center' },
-      1: { cellWidth: 60 },
-      2: { cellWidth: 25, halign: 'right' },
+      1: { cellWidth: 55 },
+      2: { cellWidth: 30, halign: 'right' },
       3: { cellWidth: 25, halign: 'right' },
       4: { cellWidth: 25, halign: 'right' },
       5: { cellWidth: 25, halign: 'right' },
@@ -180,7 +180,7 @@ export async function downloadUnitsXlsx(
     Kelompok: unit.group,
     'Kehadiran (%)': unit.attendance.pct,
     'Kehadiran (catatan)': unit.attendance.present,
-    'Hadir': unit.attendance.statuses.Hadir,
+    'Hadir Langsung': unit.attendance.statuses.Hadir,
     'Diwakili': unit.attendance.statuses.Diwakili,
     'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
     'Sakit': unit.attendance.statuses.Sakit,
@@ -200,7 +200,7 @@ export async function downloadUnitsXlsx(
   const statusRows = units.map((unit, index) => ({
     No: index + 1,
     'Perangkat Daerah': unit.short,
-    Hadir: unit.attendance.statuses.Hadir,
+    'Hadir Langsung': unit.attendance.statuses.Hadir,
     Diwakili: unit.attendance.statuses.Diwakili,
     'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
     Sakit: unit.attendance.statuses.Sakit,
@@ -236,7 +236,7 @@ export async function downloadUnitsXlsx(
     { wch: 18 },
     { wch: 13 },
     { wch: 16 },
-    { wch: 8 },
+    { wch: 16 },
     { wch: 9 },
     { wch: 11 },
     { wch: 8 },
@@ -256,7 +256,7 @@ export async function downloadUnitsXlsx(
   statusSheet['!cols'] = [
     { wch: 5 },
     { wch: 34 },
-    { wch: 8 },
+    { wch: 16 },
     { wch: 9 },
     { wch: 11 },
     { wch: 8 },
@@ -321,7 +321,7 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
   const statusText =
     'Rincian kehadiran: ' +
     statusOrder
-      .map((status) => `${status} ${num(unit.attendance.statuses[status])}`)
+      .map((status) => `${statusLabels[status]} ${num(unit.attendance.statuses[status])}`)
       .join(' | ');
   const statusLines = doc.splitTextToSize(pdfText(statusText), 260) as string[];
   doc.text(statusLines, 14, 55);
@@ -480,7 +480,7 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     { Keterangan: 'Kehadiran (%)', Nilai: unit.attendance.pct },
     { Keterangan: 'Kehadiran (catatan)', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
     ...statusOrder.map((status) => ({
-      Keterangan: status,
+      Keterangan: statusLabels[status],
       Nilai: `${unit.attendance.statuses[status]} (${
         unit.attendance.total
           ? pct((unit.attendance.statuses[status] / unit.attendance.total) * 100)
@@ -533,7 +533,7 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
 
   const statusSummary = [
     ...statusOrder.map((status) => ({
-      Status: status,
+      Status: statusLabels[status],
       Jumlah: unit.attendance.statuses[status],
       Persentase: unit.attendance.total
         ? pct((unit.attendance.statuses[status] / unit.attendance.total) * 100)

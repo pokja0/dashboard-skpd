@@ -336,7 +336,7 @@
         </div>
         <div class="unit-card-metrics">
           <div class="unit-card-metric">
-            <span>Hadir</span>
+            <span>Kehadiran</span>
             <strong>{pct(unit.attendance.pct)}</strong>
             <small>{num(unit.attendance.present)}/{num(unit.attendance.total)}</small>
           </div>

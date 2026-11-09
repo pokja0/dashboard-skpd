@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { statusColors, statusOrder, type DashboardUnit } from '#lib/data';
+  import { statusColors, statusLabels, statusOrder, type DashboardUnit } from '#lib/data';
   import { buildDashboard, fullRange } from '#lib/dashboard';
   import { num, pct, decimal, dateISO, truncate } from '#lib/format';
   import Icon from '#lib/components/Icon.svelte';
@@ -30,7 +30,7 @@
 
   const statusSegments = $derived(
     statusOrder.map((status) => ({
-      label: status,
+      label: statusLabels[status],
       value: summary.attendance.statuses[status],
       color: statusColors[status]
     }))
@@ -207,7 +207,7 @@
       label="Kehadiran rapat"
       value={decimal(summary.attendance.pct)}
       suffix="%"
-      detail={`${num(summary.attendance.present)} dari ${num(summary.attendance.total)} catatan (Hadir, Diwakili, Dinas Luar, Sakit).`}
+      detail={`${num(summary.attendance.present)} dari ${num(summary.attendance.total)} catatan (Hadir Langsung, Diwakili, Dinas Luar, Sakit).`}
       meter={summary.attendance.pct}
       chips={[
         { text: `${num(summary.attendance.meetings)} rapat`, tone: 'primary' },
