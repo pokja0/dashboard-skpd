@@ -8,11 +8,13 @@
     dashboard,
     DATA_MAX,
     DATA_MIN,
+    fullRange,
     monthForRange,
     monthOptions,
     range,
     RANGE_STORAGE_KEY,
     setFrom,
+    setFullRange,
     setMonth,
     setRange,
     setTo
@@ -27,7 +29,10 @@
         const parsed = JSON.parse(saved) as { from?: string; to?: string };
         if (parsed.from && parsed.to) {
           setRange(parsed.from, parsed.to);
-          forceCustom = monthForRange({ from: parsed.from, to: parsed.to }) === null;
+          const savedRange = { from: parsed.from, to: parsed.to };
+          const isFullRange =
+            savedRange.from === fullRange.from && savedRange.to === fullRange.to;
+          forceCustom = !isFullRange && monthForRange(savedRange) === null;
         }
       } catch {
         // ignore invalid stored value
@@ -37,16 +42,29 @@
     }
   });
 
+  const isAllMonths = $derived(
+    $range.from === fullRange.from && $range.to === fullRange.to
+  );
   const selectedMonth = $derived(
-    forceCustom ? 'custom' : (monthForRange($range) ?? 'custom')
+    forceCustom ? 'custom' : isAllMonths ? 'all' : (monthForRange($range) ?? 'custom')
   );
   const isCustom = $derived(selectedMonth === 'custom');
   const isCurrentPartial = $derived(
     $range.from.slice(0, 7) === CURRENT_MONTH && $range.to === DATA_MAX
   );
+  const allMonthsLabel = $derived.by(() => {
+    const latest = monthOptions[0]?.label.replace(' (berjalan)', '') ?? 'terbaru';
+    const earliest = monthOptions[monthOptions.length - 1]?.label.split(' ')[0] ?? 'Januari';
+    return `Semua bulan (${earliest}–${latest})`;
+  });
 
   function onMonthChange(event: Event) {
     const select = event.currentTarget as HTMLSelectElement;
+    if (select.value === 'all') {
+      forceCustom = false;
+      setFullRange();
+      return;
+    }
     if (select.value === 'custom') {
       forceCustom = true;
       return;
@@ -88,6 +106,7 @@
         {#each monthOptions as option}
           <option value={option.value}>{option.label}</option>
         {/each}
+        <option value="all">{allMonthsLabel}</option>
         <option value="custom">Rentang khusus</option>
       </select>
     </label>

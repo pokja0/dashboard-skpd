@@ -197,6 +197,18 @@ export async function downloadUnitsXlsx(
     'Luar daerah': unit.travel.outside
   }));
 
+  const statusRows = units.map((unit, index) => ({
+    No: index + 1,
+    'Perangkat Daerah': unit.short,
+    Hadir: unit.attendance.statuses.Hadir,
+    Diwakili: unit.attendance.statuses.Diwakili,
+    'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
+    Sakit: unit.attendance.statuses.Sakit,
+    Izin: unit.attendance.statuses.Izin,
+    'Tanpa Keterangan': unit.attendance.statuses['Tanpa Keterangan'],
+    Total: unit.attendance.total
+  }));
+
   const info = [
     { Keterangan: 'Judul', Nilai: TITLE },
     { Keterangan: 'Periode', Nilai: meta.periodLabel },
@@ -212,6 +224,7 @@ export async function downloadUnitsXlsx(
 
   const workbook = XLSX.utils.book_new();
   const dataSheet = XLSX.utils.json_to_sheet(rows);
+  const statusSheet = XLSX.utils.json_to_sheet(statusRows);
   const infoSheet = XLSX.utils.json_to_sheet(info);
 
   dataSheet['!cols'] = [
@@ -240,8 +253,20 @@ export async function downloadUnitsXlsx(
     { wch: 12 }
   ];
   infoSheet['!cols'] = [{ wch: 22 }, { wch: 60 }];
+  statusSheet['!cols'] = [
+    { wch: 5 },
+    { wch: 34 },
+    { wch: 8 },
+    { wch: 9 },
+    { wch: 11 },
+    { wch: 8 },
+    { wch: 8 },
+    { wch: 16 },
+    { wch: 8 }
+  ];
 
   XLSX.utils.book_append_sheet(workbook, dataSheet, 'Perangkat Daerah');
+  XLSX.utils.book_append_sheet(workbook, statusSheet, 'Rekap Kehadiran');
   XLSX.utils.book_append_sheet(workbook, infoSheet, 'Info');
   XLSX.writeFile(workbook, `${fileStamp(meta)}.xlsx`);
 }
@@ -454,12 +479,14 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     { Keterangan: 'Sumber', Nilai: SOURCE },
     { Keterangan: 'Kehadiran (%)', Nilai: unit.attendance.pct },
     { Keterangan: 'Kehadiran (catatan)', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
-    {
-      Keterangan: 'Rekap kehadiran',
-      Nilai: statusOrder
-        .map((status) => `${status} ${unit.attendance.statuses[status]}`)
-        .join(', ')
-    },
+    ...statusOrder.map((status) => ({
+      Keterangan: status,
+      Nilai: `${unit.attendance.statuses[status]} (${
+        unit.attendance.total
+          ? pct((unit.attendance.statuses[status] / unit.attendance.total) * 100)
+          : '0%'
+      })`
+    })),
     {
       Keterangan: 'Disposisi (%)',
       Nilai: unit.disposition.total ? (unit.disposition.pct ?? '') : 'Tidak ada data'
