@@ -1,6 +1,6 @@
 import type { DashboardMeta } from './dashboard';
 import type { DashboardUnit } from './data';
-import { dataset } from './data';
+import { dataset, statusOrder } from './data';
 import { dateISO, decimal, num, pct, titleCase } from './format';
 
 const SOURCE = 'Rekap Tim Staf Sekda';
@@ -76,9 +76,17 @@ export async function downloadUnitsPdf(
     );
   }
 
+  const pageFooter = () => {
+    const page = doc.getNumberOfPages();
+    doc.setFontSize(7.5);
+    doc.setTextColor(120, 130, 145);
+    doc.text(`Halaman ${page}`, 283, 203, { align: 'right' });
+    doc.text(SOURCE, 14, 203);
+  };
+
   autoTable(doc, {
     startY: headChangeCount > 0 ? 41 : 37,
-    head: [['No', 'Perangkat Daerah', 'Kepala', 'Hadir', 'Disposisi', 'Nilai R&P', 'Perjalanan']],
+    head: [['No', 'Perangkat Daerah', 'Kepala', 'Kehadiran', 'Disposisi', 'Nilai R&P', 'Perjalanan']],
     body: units.map((unit, index) => [
       String(index + 1),
       pdfText(unit.short) + (unit.headChanged ? ' *' : ''),
@@ -102,13 +110,56 @@ export async function downloadUnitsPdf(
       5: { cellWidth: 22, halign: 'right' },
       6: { cellWidth: 40 }
     },
-    didDrawPage: () => {
-      const page = doc.getNumberOfPages();
-      doc.setFontSize(7.5);
-      doc.setTextColor(120, 130, 145);
-      doc.text(`Halaman ${page}`, 283, 203, { align: 'right' });
-      doc.text(SOURCE, 14, 203);
-    }
+    didDrawPage: pageFooter
+  });
+
+  let nextY =
+    (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 0;
+  if (nextY > 140) {
+    doc.addPage();
+    nextY = 18;
+  } else {
+    nextY += 8;
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(0, 77, 153);
+  doc.text(pdfText(`Rincian status kehadiran per unit - ${meta.periodLabel}`), 14, nextY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(95, 109, 128);
+  doc.text('DL = Dinas Luar, TK = Tanpa Keterangan', 14, nextY + 4);
+
+  autoTable(doc, {
+    startY: nextY + 7,
+    head: [['No', 'Perangkat Daerah', 'Hadir', 'Diwakili', 'DL', 'Sakit', 'Izin', 'TK', 'Total']],
+    body: units.map((unit, index) => [
+      String(index + 1),
+      pdfText(unit.short),
+      String(unit.attendance.statuses.Hadir),
+      String(unit.attendance.statuses.Diwakili),
+      String(unit.attendance.statuses['Dinas Luar']),
+      String(unit.attendance.statuses.Sakit),
+      String(unit.attendance.statuses.Izin),
+      String(unit.attendance.statuses['Tanpa Keterangan']),
+      String(unit.attendance.total)
+    ]),
+    styles: { font: 'helvetica', fontSize: 8, cellPadding: 2, textColor: [11, 32, 56] },
+    headStyles: { fillColor: [0, 77, 153], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+    alternateRowStyles: { fillColor: [248, 246, 240] },
+    columnStyles: {
+      0: { cellWidth: 9, halign: 'center' },
+      1: { cellWidth: 60 },
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 25, halign: 'right' },
+      4: { cellWidth: 25, halign: 'right' },
+      5: { cellWidth: 25, halign: 'right' },
+      6: { cellWidth: 25, halign: 'right' },
+      7: { cellWidth: 25, halign: 'right' },
+      8: { cellWidth: 22, halign: 'right' }
+    },
+    didDrawPage: pageFooter
   });
 
   doc.save(`${fileStamp(meta)}.pdf`);
@@ -128,7 +179,13 @@ export async function downloadUnitsXlsx(
     'Catatan kepala': unit.headChanged ? 'Pergantian, perlu verifikasi' : '',
     Kelompok: unit.group,
     'Kehadiran (%)': unit.attendance.pct,
-    'Hadir (catatan)': unit.attendance.present,
+    'Kehadiran (catatan)': unit.attendance.present,
+    'Hadir': unit.attendance.statuses.Hadir,
+    'Diwakili': unit.attendance.statuses.Diwakili,
+    'Dinas Luar': unit.attendance.statuses['Dinas Luar'],
+    'Sakit': unit.attendance.statuses.Sakit,
+    'Izin': unit.attendance.statuses.Izin,
+    'Tanpa Keterangan': unit.attendance.statuses['Tanpa Keterangan'],
     'Total catatan kehadiran': unit.attendance.total,
     'Disposisi (%)': unit.disposition.pct ?? '',
     'Selesai': unit.disposition.done,
@@ -165,6 +222,12 @@ export async function downloadUnitsXlsx(
     { wch: 26 },
     { wch: 18 },
     { wch: 13 },
+    { wch: 16 },
+    { wch: 8 },
+    { wch: 9 },
+    { wch: 11 },
+    { wch: 8 },
+    { wch: 8 },
     { wch: 16 },
     { wch: 20 },
     { wch: 13 },
@@ -227,7 +290,18 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
     50
   );
 
-  let cursor = 56;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(43, 63, 87);
+  const statusText =
+    'Rincian kehadiran: ' +
+    statusOrder
+      .map((status) => `${status} ${num(unit.attendance.statuses[status])}`)
+      .join(' | ');
+  const statusLines = doc.splitTextToSize(pdfText(statusText), 260) as string[];
+  doc.text(statusLines, 14, 55);
+  let cursor = 55 + statusLines.length * 3.6 + 4;
+
   if (unit.leadership?.length) {
     const history = unit.leadership
       .map(
@@ -241,8 +315,8 @@ export async function downloadUnitPdf(unit: DashboardUnit, meta: DashboardMeta):
     doc.setFontSize(8);
     doc.setTextColor(43, 63, 87);
     const lines = doc.splitTextToSize(pdfText(`Riwayat kepala: ${history}`), 260) as string[];
-    doc.text(lines, 14, 55);
-    cursor = 55 + lines.length * 3.6 + 4;
+    doc.text(lines, 14, cursor);
+    cursor += lines.length * 3.6 + 4;
   }
 
   const pageFooter = () => {
@@ -379,7 +453,13 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     { Keterangan: 'Periode', Nilai: meta.periodLabel },
     { Keterangan: 'Sumber', Nilai: SOURCE },
     { Keterangan: 'Kehadiran (%)', Nilai: unit.attendance.pct },
-    { Keterangan: 'Hadir', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
+    { Keterangan: 'Kehadiran (catatan)', Nilai: `${unit.attendance.present}/${unit.attendance.total}` },
+    {
+      Keterangan: 'Rekap kehadiran',
+      Nilai: statusOrder
+        .map((status) => `${status} ${unit.attendance.statuses[status]}`)
+        .join(', ')
+    },
     {
       Keterangan: 'Disposisi (%)',
       Nilai: unit.disposition.total ? (unit.disposition.pct ?? '') : 'Tidak ada data'
@@ -424,11 +504,30 @@ export async function downloadUnitXlsx(unit: DashboardUnit, meta: DashboardMeta)
     Status: item.status
   }));
 
+  const statusSummary = [
+    ...statusOrder.map((status) => ({
+      Status: status,
+      Jumlah: unit.attendance.statuses[status],
+      Persentase: unit.attendance.total
+        ? pct((unit.attendance.statuses[status] / unit.attendance.total) * 100)
+        : '0%'
+    })),
+    {
+      Status: 'Total',
+      Jumlah: unit.attendance.total,
+      Persentase: unit.attendance.total ? '100%' : '0%'
+    }
+  ];
+
   const workbook = XLSX.utils.book_new();
 
   const infoSheet = XLSX.utils.json_to_sheet(info);
   infoSheet['!cols'] = [{ wch: 24 }, { wch: 60 }];
   XLSX.utils.book_append_sheet(workbook, infoSheet, 'Ringkasan');
+
+  const statusSheet = XLSX.utils.json_to_sheet(statusSummary);
+  statusSheet['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(workbook, statusSheet, 'Rekap Kehadiran');
 
   const dispSheet = XLSX.utils.json_to_sheet(dispositions);
   dispSheet['!cols'] = [
